@@ -1,0 +1,7 @@
+{
+	"widgets": [
+	{
+		"name":"smbalance",
+		"path":"balance/widget-sm.html"
+	}]
+}

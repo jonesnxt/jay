@@ -1,0 +1,76 @@
+<!--login modal-->
+
+
+
+<div id="loginModal" class="modal show" tabindex="-1" role="dialog" aria-hidden="true">
+
+
+  <div class="modal-dialog">
+  <div class="modal-content">
+      <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+          <h1 class="text-center">Unlock Account</h1>
+      </div>
+      <div class="modal-body">
+          <form class="form col-md-12 center-block unlock">
+            <div class="form-group">
+<div class="form-group"><label for="passfile">Account file:</label>
+<select class="form-control input-lg passfile" name="passfile">
+</select></div><br/>
+              <input name="password" type="password" class="local form-control input-lg" placeholder="Local Password">
+            </div>
+            <div class="form-group">
+              <button class="btn btn-primary btn-lg btn-block">Unlock</button>
+              <span class="pull-right"><a href="#" onclick="$('.container').load('newaccount.html');" class="newaccount">New Account</a></span><span><a class="passphrase" onclick="$('.container').load('passphrase.html');"href="#">Single Passphrase</a></span>
+            </div>
+          </form>
+      </div>
+      <div class="modal-footer">	
+      </div>
+  </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+	
+	APIRequest("listAccountFiles", "", function(data) {
+		for(var i=0; i < data.accounts.length; i++)
+		{
+
+			$(".passfile").append("<option>"+data.accounts[i]+"</option>");
+		}
+	});
+
+$(".unlock").submit(function(event) {
+	event.preventDefault();
+	//do cool things
+	var loops = 1000;
+	var feeder = $(".local").val();
+	for(var i=0; i<loops; i++)
+	{
+		feeder = CryptoJS.SHA256(feeder).toString();
+	}
+	APIRequest("getAccountFile", "name="+$(".passfile").val(), function(account) {
+		dt = account.data.replace(/-/g, '+').replace(/_/g, '/');
+		while (dt.length % 4)
+			dt += '=';
+		var hex = CryptoJS.AES.decrypt(dt, feeder);
+    		var passphrase = hex.toString(CryptoJS.enc.Utf8);
+
+		if(passphrase[0] != 'J')
+		{
+			//passphrase incorrect
+			$("h1").text("Password Incorrect");
+		}
+		else
+		{
+			APIRequest("logIn","secretPhrase="+passphrase, function() {
+				window.location = "../index.html";
+			});
+		}
+	});
+
+	
+	
+});
+</script>

@@ -1,0 +1,72 @@
+<!--login modal-->
+<div id="loginModal" class="modal show" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+  <div class="modal-content">
+      <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+          <h1 class="text-center">New Account</h1>
+      </div>
+      <div class="modal-body">
+<div class="alert alert-danger"><strong>Write down local password in a safe place.</strong> If it is lost, the account is unrecoverable</div>
+          <form class="new form col-md-12 center-block">
+            <div class="form-group">
+<div class="form-group"><label for="passfile">Account file name:</label>
+              <input name="password" type="text" class="passfile form-control input-lg" placeholder="Example: 'jones'">
+<br/>
+              <input name="password" type="password" class="local form-control input-lg" placeholder="Local Password">
+
+            </div>
+            <div class="form-group">
+              <button class="btn btn-primary btn-lg btn-block">Create New Account</button>
+              <span class="pull-right"><a href="#" onclick="$('.container').load('login.html');" class="unlock">Unlock Account</a></span><span><a href="#" onclick="$('.container').load('passphrase.html');" class="passphrase">Single Passphrase</a></span>
+            </div>
+          </form>
+      </div>
+      <div class="modal-footer">	
+      </div>
+  </div>
+  </div>
+</div>
+<script>
+function randString(x){
+
+var text = "";
+    var possible = "abcdefghijklmnopqrstuvwxyz";
+
+    for( var i=0; i < x; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+
+}
+
+
+$(".new").submit(function(event) {
+	event.preventDefault();
+	//do cool things
+	var loops = 1000;
+	var feeder = $(".local").val();
+	for(var i=0; i<loops; i++)
+	{
+		feeder = CryptoJS.SHA256(feeder).toString();
+	}
+	
+	passphrase = "J" + randString(100);    	
+
+	var filed = CryptoJS.AES.encrypt(passphrase, feeder).toString();
+	var urlsafe = filed.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+	APIRequest("writeNewAccountFile", "name="+$(".passfile").val()+"&data="+urlsafe, function(data) {
+		if(data.result == "success")
+		{
+			$(".container").load("login.html");
+		}
+		else
+		{
+			$(".alert").text("account already exists, or other account error occured");
+		}
+	});
+
+	
+	
+});
+</script>

@@ -1,0 +1,38 @@
+
+<!-- Modal -->
+<div class="modal fade" id="verify-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Verify Transaction</h4>
+      </div>
+      <div class="modal-body">
+       	<div class="alert alert-info"><strong>A transaction has been created by the plugin <i class="plugin"></i> and awaits your approval.</strong></div>
+      </div>
+      	<dl class="modal-list">
+      	</dl>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Deny Transaction</button>
+        <button type="button" class="btn btn-primary">Verify Transaction</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+APIRequest("signingPopup", "", function(info) {
+	$(".modal-plugin").text(info.plugin);
+	for(var key in info.transaction)
+	{
+		$(".modal-last").append("<dt>" + key + "</dt>");
+		$(".modal-last").append("<dd>" + info.transaction[key] + "</dd> ")
+
+	}
+
+	$("#verify-modal").modal();
+
+});
+
+</script>
+

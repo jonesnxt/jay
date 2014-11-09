@@ -1,0 +1,28 @@
+
+<div class="col-md-3">
+	<div class="panel panel-primary">
+		<div class="panel-heading">
+			<div class="row">
+				<div class="col-xs-3">
+					<i class="fa fa-money fa-5x"/>
+				</div>
+				<div class="col-xs-9 text-right">
+					<div class="huge balance">
+
+					</div>
+					<div>
+						Account Balance
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+<script>
+	APIRequest("getLoggedInAccount", "" , function(acc) {
+		APIRequest("getBalance", "account="+ acc.address, function(bal) {
+			if(bal.errorCode != 4) $(".balance").text((bal.balanceNQT/100000000) + " NXT");
+			else $(".balance").text("0 NXT");
+		});
+	});
+</script>

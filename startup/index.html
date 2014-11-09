@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=9" />
+
+<script src="../util/jquery.js"></script>
+<link href="../util/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="../util/bootstrap/js/bootstrap.min.js"></script>
+<script src="../request/request.js"></script>
+<script src="../util/crypto/aes-full-min.js"></script>
+<script src="../util/crypto/sha256-min.js"></script>
+
+<style>
+body {
+	background:url('splash.jpg') no-repeat center center;
+}
+
+.modal-footer {   border-top: 0px; }
+</style>
+
+<script>
+
+
+$(document).ready(function() {
+
+	APIRequest("listAccountFiles", "", function(data) {
+	if(data.accounts.length == 0)
+	{
+		$(".container").load("newaccount.html");
+	}
+	else
+	{
+		$(".container").load("login.html");
+	}
+	});
+
+});
+
+</script>
+
+
+</head>
+
+<body>
+<div class="container">
+
+</div>
+</body>
+</html>
