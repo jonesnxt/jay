@@ -3,7 +3,11 @@
 var Jay = (function(Jay, $, undefined) {
 	"use strict";
 
+	Jay.init = new function() {
+		
 
+		
+	}
 	
 
 	return NRS;
