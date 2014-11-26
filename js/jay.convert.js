@@ -8,5 +8,5 @@ var Jay = (function(Jay, $, undefined) {
 	}
 	
 
-	return NRS;
-}(NRS || {}, jQuery));
+	return Jay;
+}(Jay || {}, jQuery));

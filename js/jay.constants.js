@@ -1,43 +1,47 @@
 
 var Jay = (function(Jay, $, undefined) {
 
-	Jay.oneNXT = 100000000;
-	Jay.jsonDef = JSON.parse("{\"error\":\"Default JSON string\"}");
+	Jay.constants = {};
+
+	Jay.constants.oneNXT = 100000000;
+	Jay.constants.jsonDef = JSON.parse("{\"error\":\"Default JSON string\"}");
 	
-	Jay.typePayment = 0;
-	Jay.typeMessaging = 1;
-	Jay.typeAsset = 2;
-	Jay.typeMarketplace = 3;
-	Jay.typeAccountControl = 4;
+	Jay.constants.typePayment = 0;
+	Jay.constants.typeMessaging = 1;
+	Jay.constants.typeAsset = 2;
+	Jay.constants.typeMarketplace = 3;
+	Jay.constants.typeAccountControl = 4;
 
-	Jay.subtypeOrdinaryPayment = 0;
-	Jay.subtypeArbitraryMessage = 0;
-	Jay.subtypeAliasAssignment = 1;
-	Jay.subtypePollCreation = 2;
-	Jay.subtypeVoteCasting = 3;
-	Jay.subtypeHubAnnouncement = 4;
-	Jay.subtypeAccountInfo = 5;
-	Jay.subtypeAliasSell = 6;
-	Jay.subtypeAliasBuy = 7;
-	Jay.subtypeAssetIssuance = 0;
-	Jay.subtypeAssetTransfer = 1;
-	Jay.subtypeAskOrderPlacement = 2;
-	Jay.subtypeBidOrderPlacement = 3;
-	Jay.subtypeAskOrderCancellation = 4;
-	Jay.subtypeBidOrderCancellation = 5;
-	Jay.subtypeGoodsListing = 0;
-	Jay.subtypeGoodsDelisting = 1;
-	Jay.subtypePriceChange = 2;
-	Jay.subtypeQuantityChange = 3;
-	Jay.subtypePurchase = 4;
-	Jay.subtypeDelivery = 5;
-	Jay.subtypeFeedback = 6;
-	Jay.subtypeRefund = 7;
-	Jay.subtypeBalanceLeasing = 0;
+	Jay.constants.constants.subtypeOrdinaryPayment = 0;
+	Jay.constants.subtypeArbitraryMessage = 0;
+	Jay.constants.subtypeAliasAssignment = 1;
+	Jay.constants.subtypePollCreation = 2;
+	Jay.constants.subtypeVoteCasting = 3;
+	Jay.constants.subtypeHubAnnouncement = 4;
+	Jay.constants.subtypeAccountInfo = 5;
+	Jay.constants.subtypeAliasSell = 6;
+	Jay.constants.subtypeAliasBuy = 7;
+	Jay.constants.subtypeAssetIssuance = 0;
+	Jay.constants.subtypeAssetTransfer = 1;
+	Jay.constants.subtypeAskOrderPlacement = 2;
+	Jay.constants.subtypeBidOrderPlacement = 3;
+	Jay.constants.subtypeAskOrderCancellation = 4;
+	Jay.constants.subtypeBidOrderCancellation = 5;
+	Jay.constants.subtypeGoodsListing = 0;
+	Jay.constants.subtypeGoodsDelisting = 1;
+	Jay.constants.subtypePriceChange = 2;
+	Jay.constants.subtypeQuantityChange = 3;
+	Jay.constants.subtypePurchase = 4;
+	Jay.constants.subtypeDelivery = 5;
+	Jay.constants.subtypeFeedback = 6;
+	Jay.constants.subtypeRefund = 7;
+	Jay.constants.subtypeBalanceLeasing = 0;
 
-	Jay.transactionVersion = 1;
+	Jay.constants.transactionVersion = 1;
 
-	Jay.epoch = new Date(2013, 11, 24, 12, 0, 0, 0).UTC();
+	Jay.constants.epoch = new Date(2013, 11, 24, 12, 0, 0, 0).UTC();
 
-	return NRS;
-}(NRS || {}, jQuery));
+	Jay.constants.quorumDefault = 3;
+
+	return Jay;
+}(Jay || {}, jQuery));
