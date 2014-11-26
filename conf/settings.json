@@ -3,5 +3,6 @@
 	{
 		"name":"smbalance",
 		"path":"balance/widget-sm.html"
-	}]
-}
+	}],
+	"nxtnodes": ["23.89.192.151", "81.23.22.150", "23.88.246.117", "23.95.37.134", "213.46.57.77", "bitsy06.vps.nxtcrypto.org", "bitsy10.vps.nxtcrypto.org", "humanoide.thican.net", "54.77.63.53", "69.163.40.132", "node7.mynxtcoin.org", "megaman.thican.net", "23.88.104.225", "jnxt.org", "178.150.207.53", "162.243.122.251", "23.88.59.40", "91.235.72.49"]
+}																																														
