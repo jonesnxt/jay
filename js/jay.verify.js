@@ -18,17 +18,34 @@ var Jay = (function(Jay, $, undefined) {
 		var host = getParameterByName('host');
 		var hop = getParameterByName('hop');
 
+		$.getJSON("./conf/settings.json", function(settings) {
+			var start = new Date().getTime();
+
+
+			for(var a=0; a<settings.nxtnodes.length; a++)
+			{
+				$.get("http://"+settings.nxtnodes[a]+":7876/nxt?requestType=getUnconfirmedTransactionIds", function(resp) {
+					$("#loadframe").append(resp);
+					var end = new Date().getTime();
+					var time = end - start;
+					$("#loadframe").append('<br/>Execution time: ' + time + "ms <br/>");
+
+				})
+			}
+
+		});
+
 		// get the metadata sent to us from the GET data
-		for(var a=0;a<Jay.verify.filelist.length;a++)
+		/*for(var a=0;a<Jay.verify.filelist.length;a++)
 		{
-			$("#loadframe").attr("src", ("http://"+host+Jay.verify.filelist[a]));
-			$("#loadframe").load(function() {
-				alert(this.sandbox.toString())
-			})
-		}
+			$("#loadframe").load("http://"+host+Jay.verify.filelist[a], function() {
+
+
+			});
+		}*/
 
 	}
 	
-	Jay.verify.filelist = ["/index.php"]; // many more files here later
+	Jay.verify.filelist = ["/testpage.txt"]; // many more files here later
 	return Jay;
 }(Jay || {}, jQuery));

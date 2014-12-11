@@ -4,7 +4,7 @@ var Jay = (function(Jay, $, undefined) {
 
 	Jay.crypto.sha256 = function(digest) {
 		var hash = CryptoJS.SHA256(digest);
-		return hash.toString(CryptoJS.enc.Base64);
+		return hash.toString(CryptoJS.enc.Hex);
 	}
 	
 

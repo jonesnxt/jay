@@ -1,0 +1,50 @@
+<script src="util/jquery.js"></script>
+<script src="util/crypto/core-min.js"></script>
+<script src="util/crypto/sha256-min.js"></script>
+<script src="util/crypto/enc-base64-min.js"></script>
+
+<script src="js/jay.crypto.js"></script>
+<script src="js/jay.conf.js"></script>
+
+<script src="js/jay.request.js"></script>
+<script>
+function getUrlParameter(sParam)
+{
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) 
+        {
+            return sParameterName[1];
+        }
+    }
+}          
+
+function getRequests() {
+    var s1 = location.search.substring(1, location.search.length).split('&'),
+        r = {}, s2, i;
+    for (i = 0; i < s1.length; i += 1) {
+        s2 = s1[i].split('=');
+        r[decodeURIComponent(s2[0]).toLowerCase()] = decodeURIComponent(s2[1]);
+    }
+    return r;
+};
+
+$(document).ready(function(){
+	Jay.conf.init(function() {
+	Jay.request.nxt(getUrlParameter("requestType"), getRequests(), function(response) {
+		$("pre").text(JSON.stringify(response));
+
+	});
+	});
+
+})
+
+
+</script>
+
+<div id="loadframe">This page takes nxt api requests through the url just like a normal node, but does it by polling other nodes and building a response.</div><br> 
+
+<pre></pre>
