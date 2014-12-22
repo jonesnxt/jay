@@ -9,7 +9,7 @@ var Jay = (function(Jay, $, undefined) {
 	Jay.request = {};
 
 
-	Jay.request.outside = function(link, postdata, callback)
+	Jay.request.outside = function(link, postdata, callback, error)
 	{
 		$.support.cors = true
 
@@ -24,13 +24,20 @@ var Jay = (function(Jay, $, undefined) {
 			success: callback,
 			error: function (jqXHR, textStatus, errorThrown)
 			{
-				alert("request error!");
+				error(jqXHR, textStatus, errorThrown);
 			}
 		});
+	}
 
-}
+	Jay.request.multiple = function(nodes, request, callback, error)
+	{
+		for(var a=0;a<nodes.length;a++)
+		{
+			Jay.request.outside
+		}
 
 	}
+
 
 	Jay.request.getRandomNxtNodes = function(amount, dontinclude) {
 		var allnodes = Jay.conf.getAttribute("nxtnodes");
@@ -61,6 +68,9 @@ var Jay = (function(Jay, $, undefined) {
 		}
 		return randnodes;
 	}
+
+
+
 
 	Jay.request.nxt = function(request, options, callback, specific) {
 		// get my 3 random servers, hope they don't collude (:
