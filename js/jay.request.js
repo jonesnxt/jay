@@ -7,13 +7,22 @@
 var Jay = (function(Jay, $, undefined) {
 
 	Jay.request = {};
+	Jay.request.nxtNodes = array();
+
+	Jay.request.init = function()
+	{
+		Jay.db.createTable("requestCache", {"request", "params", "response", "checksum"});
+		Jay.db.createTable("nodeFails", {"node", "fails"});
+
+		Jay.request.nxtNodes = Jay.conf.getAttribute("nxtnodes");
+	}
 
 
 	Jay.request.outside = function(link, postdata, callback, error)
 	{
 		$.support.cors = true
 
-		var fulldata = "requestType="+request+"&"+$.params(postdata);
+		var fulldata = $.params(postdata);
 		$.ajax({
 			url: link,
 			type: "post",
@@ -21,26 +30,29 @@ var Jay = (function(Jay, $, undefined) {
 			dataType: 'json',
 			data : fulldata,
 			async: true,
-			success: callback,
+			success: function(data, textStatus, jqXHR)
+			{
+				callback(data, textStatus, jqXHR, link, postdata);
+			},
 			error: function (jqXHR, textStatus, errorThrown)
 			{
-				error(jqXHR, textStatus, errorThrown);
+				error(errorThrown, textStatus, jqXHR, link, postdata);
 			}
 		});
 	}
 
-	Jay.request.multiple = function(nodes, request, callback, error)
+	Jay.request.multiple = function(nodes, params, callback, error)
 	{
 		for(var a=0;a<nodes.length;a++)
 		{
-			Jay.request.outside
+			Jay.request.outside(nodes[a], params, callback, error);
 		}
-
 	}
 
 
+
 	Jay.request.getRandomNxtNodes = function(amount, dontinclude) {
-		var allnodes = Jay.conf.getAttribute("nxtnodes");
+		var allnodes = Jay.request.nxtNodes;
 		var randnodes = [];
 		for(var a=0; a<amount; a++)
 		{
@@ -53,7 +65,7 @@ var Jay = (function(Jay, $, undefined) {
 					continue;
 				}
 			}
-			if(dontinclude != null)
+			if(typeof(dontinclude) !== undefined)
 			{
 				for(var b=0; b<dontinclude.length;b++)
 				{
@@ -69,10 +81,46 @@ var Jay = (function(Jay, $, undefined) {
 		return randnodes;
 	}
 
+	Jay.request.nxtGet = function(request, params, callback, specific)
+	{
+		// ok so whats this going to do... its going to
+		// 1. start by calling three nodes.
+		// 2. switch over to the nxtGet collector function and do the rest there.
+		// 3. ooh, and lets start a table for this to collect under...
+		params["requestType"] = request;
+		var requestSum = Jay.crypto.sha256($.params(params));
+		Jay.db.createTable(requestSum, {"name", "value"});
+		Jay.db.insert(requestSum, {"name":"specific", "value":specific});
+		Jay.db.insert(requestSum, {"name":"callback", "value":callback});
+		Jay.db.insert(requestSum, {"name":"request", "value":request});
+		Jay.db.insert(requestSum, {"name":"params", "value":params});
+		Jay.db.insert()
+		// alright, now 3 nodes to start, lets get them
+		var rawNodes = getRandomNxtNodes(3);
+		var nodes = array();
+		for(var a=0;a<nodes.length;a++)
+		{
+			nodes[a] = "http://" + rawNodes[a] + ":7876/nxt";
+		}
+
+		Jay.request.multiple(nodes, params, Jay.request.nxtCollect, Jay.request.nxtCollect);
+	}
+
+	Jay.request.nxtCollect = function(data, textStatus, jqXHR, link, postdata)
+	{
+		var requestSum = Jay.crypto.sha256($.params(postdata));
+		if(!Jay.db.exists(requestSum)) Jay.error.fatal("nxtCollect picking up index that doesn't exist");
+
+		alert(textStatus);
+		// if failure...
+		if(textStatus == "") {
+
+		}
+
+	}
 
 
-
-	Jay.request.nxt = function(request, options, callback, specific) {
+	/*Jay.request.nxt = function(request, options, callback, specific) {
 		// get my 3 random servers, hope they don't collude (:
 		var nodes = Jay.request.getRandomNxtNodes(3);
 		var addr = ":7876/nxt?requestType="+request+"&"+$.param(options);
@@ -104,7 +152,7 @@ var Jay = (function(Jay, $, undefined) {
 							{
 								// still no majority, lets do a final fallback... ouch..
 								/*var evenmorenodes = Jay.reqest.getRandomNxtNodes(2, nodes.concat(morenodes));
-								$.when($.getJSON(morenodes))*/
+								$.when($.getJSON(morenodes))
 
 
 								// think about this area some more...
@@ -121,7 +169,7 @@ var Jay = (function(Jay, $, undefined) {
 				alert("fail");
 			});
 
-	}
+	}*/
 
 	Jay.request.findMajority = function(hashes)
 	{

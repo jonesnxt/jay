@@ -4,7 +4,7 @@ var Jay = (function(Jay, $, undefined) {
 	Jay.db.meta = {};
 	Jay.db.database = {};
 
-	Jay.db.newTable = function(tablename, rows)
+	Jay.db.createTable = function(tablename, rows)
 	{
 		if(typeof(Jay.db.meta[tablename]) !== undefined) Jay.error.fatal("Failed to create table \"" + tablename +"\", already exists");
 
@@ -24,9 +24,9 @@ var Jay = (function(Jay, $, undefined) {
 
 	Jay.db.select = function(tablename, index, value)
 	{
-		if(typeof(Jay.db.meta[tablename]) === -1)
+		if(typeof(Jay.db.meta[tablename]) === undefined)
 			Jay.error.fatal("Table \"" + tablename + "\" doesn't exist");
-		if($.inArray(index, Jay.db.meta[tablename] === false)
+		if($.inArray(index, Jay.db.meta[tablename] === -1)
 			Jay.error.fatal("Table \"" + tablename + "\" doesn't have index \""+index+"\""); 
 
 		for(var a=0;a<Jay.db.database[tablename].length;a++)
@@ -34,6 +34,12 @@ var Jay = (function(Jay, $, undefined) {
 			if(Jay.db.database[tablename][a][index] == value) return Jay.db.database[tablename][a];
 		}
 		return false;
+	}
+
+	Jay.db.exists = function(tablename,)
+	{
+		if(typeof(Jay.db.meta[tablename]) === undefined) return false;
+		return true;
 	}
 
 	return Jay;
