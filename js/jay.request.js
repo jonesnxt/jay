@@ -7,13 +7,12 @@
 var Jay = (function(Jay, $, undefined) {
 
 	Jay.request = {};
-	Jay.request.nxtNodes = array();
+	Jay.request.nxtNodes = []
 
 	Jay.request.init = function()
 	{
-		Jay.db.createTable("requestCache", {"request", "params", "response", "checksum"});
-		Jay.db.createTable("nodeFails", {"node", "fails"});
-
+		Jay.db.createTable("requestCache", ["request", "params", "response", "checksum", "timestamp"]);
+		Jay.db.createTable("nodeFails", ["node", "fails"]);
 		Jay.request.nxtNodes = Jay.conf.getAttribute("nxtnodes");
 	}
 
@@ -21,8 +20,7 @@ var Jay = (function(Jay, $, undefined) {
 	Jay.request.outside = function(link, postdata, callback, error)
 	{
 		$.support.cors = true
-
-		var fulldata = $.params(postdata);
+		var fulldata = $.param(postdata);
 		$.ajax({
 			url: link,
 			type: "post",
@@ -30,6 +28,7 @@ var Jay = (function(Jay, $, undefined) {
 			dataType: 'json',
 			data : fulldata,
 			async: true,
+			timeout: 1000,
 			success: function(data, textStatus, jqXHR)
 			{
 				callback(data, textStatus, jqXHR, link, postdata);
@@ -43,6 +42,7 @@ var Jay = (function(Jay, $, undefined) {
 
 	Jay.request.multiple = function(nodes, params, callback, error)
 	{
+		alert(nodes.length);;
 		for(var a=0;a<nodes.length;a++)
 		{
 			Jay.request.outside(nodes[a], params, callback, error);
@@ -65,7 +65,7 @@ var Jay = (function(Jay, $, undefined) {
 					continue;
 				}
 			}
-			if(typeof(dontinclude) !== undefined)
+			if(dontinclude !== undefined)
 			{
 				for(var b=0; b<dontinclude.length;b++)
 				{
@@ -81,41 +81,94 @@ var Jay = (function(Jay, $, undefined) {
 		return randnodes;
 	}
 
-	Jay.request.nxtGet = function(request, params, callback, specific)
+	Jay.request.nxtGet = function(request, params, callback, specific, cached)
 	{
 		// ok so whats this going to do... its going to
 		// 1. start by calling three nodes.
 		// 2. switch over to the nxtGet collector function and do the rest there.
 		// 3. ooh, and lets start a table for this to collect under...
 		params["requestType"] = request;
-		var requestSum = Jay.crypto.sha256($.params(params));
-		Jay.db.createTable(requestSum, {"name", "value"});
+		var requestSum = Jay.crypto.sha256($.param(params));
+		Jay.db.createTable(requestSum, ["name", "value"]);
 		Jay.db.insert(requestSum, {"name":"specific", "value":specific});
 		Jay.db.insert(requestSum, {"name":"callback", "value":callback});
 		Jay.db.insert(requestSum, {"name":"request", "value":request});
 		Jay.db.insert(requestSum, {"name":"params", "value":params});
-		Jay.db.insert()
+		Jay.db.insert(requestSum, {"name":"nodesReturned", "value":0});
+		//Jay.db.insert()
 		// alright, now 3 nodes to start, lets get them
-		var rawNodes = getRandomNxtNodes(3);
-		var nodes = array();
-		for(var a=0;a<nodes.length;a++)
+		var rawNodes = Jay.request.getRandomNxtNodes(3);
+		Jay.db.insert(requestSum, {"name":"nodes", "value":rawNodes});
+		var nodes = [];
+		for(var a=0;a<rawNodes.length;a++)
 		{
 			nodes[a] = "http://" + rawNodes[a] + ":7876/nxt";
 		}
-
+ 
 		Jay.request.multiple(nodes, params, Jay.request.nxtCollect, Jay.request.nxtCollect);
 	}
 
 	Jay.request.nxtCollect = function(data, textStatus, jqXHR, link, postdata)
 	{
-		var requestSum = Jay.crypto.sha256($.params(postdata));
+		alert(JSON.stringify(data));
+		var requestSum = Jay.crypto.sha256($.param(postdata));
 		if(!Jay.db.exists(requestSum)) Jay.error.fatal("nxtCollect picking up index that doesn't exist");
 
-		alert(textStatus);
-		// if failure...
-		if(textStatus == "") {
+		alert("ts: "+textStatus);
+		// if failure... call, call another node
+		if(textStatus == "timeout" || textStatus == "error") {
+			var newChoice = Jay.request.getRandomNxtNodes(1, Jay.db.select(requestSum, "name", "nodes").value);
+			Jay.request.outside("http://"+newChoice+":7876/nxt", postdata, Jay.request.nxtCollect, Jay.request.nxtCollect);
+			// add this node to node fails
+
 
 		}
+		else
+		{
+			var nodenum = Jay.db.select(requestSum, "name", "nodesReturned").value + 1;
+			Jay.db.alter(requestSum, "name", "nodesReturned", "value", nodenum);
+			var resp = "response"+nodenum;
+			Jay.db.insert(requestSum, {"name":resp, "value": data});
+			if(nodenum == 3)
+			{
+				// now we do a first-level comparason
+				var one = Jay.db.select(requestSum, "name", "response1").value;
+				var two = Jay.db.select(requestSum, "name", "response2").value;
+				var three = Jay.db.select(requestSum, "name", "response3").value;
+				var specific = Jay.db.select(requestSum, "name", "specific").value;
+				var ret = 0;
+				if(Jay.request.objectCompare(one, two, specific) || Jay.request.objectCompare(one, three, specific))
+				{
+					// success on this one, 2 of 3
+					ret = one;
+				}
+				else if(Jay.request.objectCompare(two, three, specific))
+				{
+					ret = two;
+				}
+				else
+				{
+					// didnt work, send more requests here...
+
+					return;
+				}
+				// if were still here, it did work, return ret and clear the tables...
+				var cb = Jay.db.select(requestSum, "name", "callback").value;
+				var request = Jay.db.select(requestSum, "name", "request").value;
+				var params = Jay.db.select(requestSum, "name", "params").value;
+				var response = ret;
+				var checksum = requestSum;
+				var timestamp = Jay.util.getTime();
+				Jay.db.insert("requestCache", {"request":request, "params":params, "response":response, "checksum":checksum, "timestamp":timestamp});
+				Jay.db.removeTable(requestSum);
+				cb(ret); // and were done, yay
+			}
+			else if(nodenum == 6)
+			{
+				// last level compare...
+			}
+		}
+		// ok, now we need to collect data, and break to compare if 3 or 6...
 
 	}
 
@@ -171,18 +224,16 @@ var Jay = (function(Jay, $, undefined) {
 
 	}*/
 
-	Jay.request.findMajority = function(hashes)
+	Jay.request.threeofsix = function(hashes)
 	{
 		//if()
 
-		if(maxi < Math.ceil(hashes.length/2)) return maxn;
-		else return -1;
 
 	}
 
 	Jay.request.objectCompare = function(o1, o2, params)
 	{
-		if(typeof(params) != undefined)
+		if(params === undefined)
 		{
 			// search for all things
 			o1.requestProcessingTime = 0;
@@ -206,29 +257,10 @@ var Jay = (function(Jay, $, undefined) {
 					}
 				}
 				else return false;
-			}
+		 	}
 			return true;
 
 		}
-		for(var p in o1){
-			alert(p + ": " + o1[p] + "  " + o2[p])
-			if(p == "requestProcessingTime") continue;
-	        if(o1.hasOwnProperty(p)){
-	            if(o1[p] !== o2[p]){
-	                return false;
-	            }
-	        }
-	    }
-	    alert("fst");
-	    for(var p in o2){
-	    	if(p == "requestProcessingTime") continue;
-	        if(o2.hasOwnProperty(p)){
-	            if(o1[p] !== o2[p]){
-	                return false;
-	            }
-	        }
-	    }
-	    return true;
 	}
 
 	function objectEquals(x, y) {
