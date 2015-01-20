@@ -2,18 +2,62 @@
  * jay.js
  * jay.crypto.js
  * jay.conf.js
- * jay.crypto.js
+ * jay.constants.js
  */
 var Jay = (function(Jay, $, undefined) {
 
 	Jay.request = {};
-	Jay.request.nxtNodes = []
+	Jay.request.nxtNodes = [];
 
 	Jay.request.init = function()
 	{
 		Jay.db.createTable("requestCache", ["request", "params", "response", "checksum", "timestamp"]);
 		Jay.db.createTable("nodeFails", ["node", "fails"]);
 		Jay.request.nxtNodes = Jay.conf.getAttribute("nxtnodes");
+	}
+
+	Jay.request.resolveNodes = function(initialNodes)
+	{
+		var nds = [];
+		var allnodes = [];
+		var reqc = 0;
+		for(var i=0; i<initialNodes.length; i++)
+		{
+			nds.push("http://"+initialNodes[i]+":7876/nxt");
+		}
+			Jay.request.multiqueue(nds, {"requestType": "getPeers", "active": "true"}, function(ret) {
+				for(var b=0; b<ret.peers.length;b++)
+				{
+					var inc = true;
+					for(var c=0;c<allnodes.length;c++)
+					{
+						if(ret.peers[b] == allnodes[c])
+						{
+							inc = false;
+							break;
+						}
+					}
+					if(inc) allnodes.push(ret.peers[b]);
+				}
+				reqc ++;
+
+				if(reqc == initialNodes.length)
+				{
+					var fmt = [];
+					for(var d=0;d<allnodes.length;d++)
+					{
+						fmt.push("http://"+allnodes[d]+":7876/nxt");
+					}
+					var cntr = fmt.length;
+					var best = [];
+					Jay.request.multiqueue(fmt, {"requestType": "getStatus"}, function(data) {
+
+
+					}, function() {cntr--;});
+				}
+
+			}, function() { reqc++; });
+		}
 	}
 
 
@@ -46,6 +90,33 @@ var Jay = (function(Jay, $, undefined) {
 		for(var a=0;a<nodes.length;a++)
 		{
 			Jay.request.outside(nodes[a], params, callback, error);
+		}
+	}
+
+	Jay.request.multiqueue = function(nodes, params, callback, error)
+	{
+		var mq = $.ajaxMultiQueue(Jay.constants.concurrency);
+		$.support.cors = true;
+		var fulldata = $.param(postdata);
+		for(var a=0;a<nodes.length;a++)
+		{
+			mq.queue({
+				url: link,
+				type: "post",
+				crossDomain: true,
+				dataType: 'json',
+				data : fulldata,
+				async: true,
+				timeout: 1000,
+				success: function(data, textStatus, jqXHR)
+				{
+					callback(data, textStatus, jqXHR, link, postdata);
+				},
+				error: function (jqXHR, textStatus, errorThrown)
+				{
+					error(errorThrown, textStatus, jqXHR, link, postdata);
+				}
+			});
 		}
 	}
 
@@ -149,7 +220,7 @@ var Jay = (function(Jay, $, undefined) {
 				else
 				{
 					// didnt work, send more requests here...
-
+					alert("more reqs");
 					return;
 				}
 				// if were still here, it did work, return ret and clear the tables...
@@ -238,6 +309,7 @@ var Jay = (function(Jay, $, undefined) {
 			// search for all things
 			o1.requestProcessingTime = 0;
 			o2.requestProcessingTime = 0;
+			alert(params);
 			return objectEquals(o1, o2);
 		}
 		else

@@ -43,5 +43,7 @@ var Jay = (function(Jay, $, undefined) {
 
 	Jay.constants.quorumDefault = 3;
 
+	Jay.constants.concurrency = 6;
+
 	return Jay;
 }(Jay || {}, jQuery));

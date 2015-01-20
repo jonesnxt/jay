@@ -8,9 +8,7 @@ var Jay = (function(Jay, $, undefined) {
 	}
 
 	Jay.error.fatal = function(message) {
-		alert("FATAL: " + message);
-		var stopTheCode = 1/0;
-		
+		alert("FATAL: " + message);		
 	}
 
 	Jay.error.info = function(message) {
