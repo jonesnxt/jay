@@ -5,6 +5,11 @@ var Jay = (function(Jay, $, undefined) {
 	{
 		return Math.floor(Date.now() / 1000);
 	}
+
+	Jay.util.getNxtTime = function()
+	{
+		return Jay.util.getTime() - Jay.constants.epoch;
+	}
 	
 	return Jay;
 }(Jay || {}, jQuery));

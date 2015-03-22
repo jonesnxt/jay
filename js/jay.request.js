@@ -4,17 +4,15 @@
  * jay.conf.js
  * jay.constants.js
  */
-var Jay = (function(Jay, $, undefined) {
+var Jay = function(node) {
 
-	Jay.request = {};
-	Jay.request.nxtNodes = [];
+	if()
 
-	Jay.request.init = function()
+	Jay.request = function()
 	{
-		Jay.db.createTable("requestCache", ["request", "params", "response", "checksum", "timestamp"]);
-		Jay.db.createTable("nodeFails", ["node", "fails"]);
-		Jay.request.nxtNodes = Jay.conf.getAttribute("nxtnodes");
+
 	}
+	Jay.nxtNodes = ["69.163.40.132","jnxt.org","nxt.noip.me","23.88.59.40","162.243.122.251"];
 
 	Jay.request.resolveNodes = function(initialNodes)
 	{
@@ -51,7 +49,7 @@ var Jay = (function(Jay, $, undefined) {
 					var cntr = fmt.length;
 					var best = [];
 					Jay.request.multiqueue(fmt, {"requestType": "getStatus"}, function(data) {
-
+						
 
 					}, function() {cntr--;});
 				}
