@@ -121,7 +121,7 @@ var Jay = function(n)
 		var trf = [];
 		trf.push(Jay.TRFVersion);
 		trf.push(type);
-		trf.push(subtype + Jay.transactionVersion << 4);
+		trf.push((subtype << 4) + (Jay.transactionVersion));
 		trf = trf.concat(this.rsToBytes(recipient));
 		trf = trf.concat(this.numberToBytes(amount));
 		trf = trf.concat(this.numberToBytes(fee));
@@ -188,15 +188,16 @@ var Jay = function(n)
 		return this.createTrf(Jay.types.payment, Jay.subtypes.ordinaryPayment, recipient, amount, 1, undefined, appendages);
 	}
 
-	this.arbitraryMessage = function(recipient, message, appendages)
+	this.sendMessage = function(recipient, message, appendages)
 	{
 		var appendage = this.addAppendage(undefined, Jay.appendages.message, message);
 		return this.createTrf(Jay.types.messaging, Jay.subtypes.arbitraryMessage, recipient, 0, 1, undefined, appendage);
 	}
 
-	this.aliasAssignment = function(alias, data, appendages)
+	this.setAlias = function(alias, data, appendages)
 	{
 		var attachment = [];
+		attachment.push(Jay.transactionVersion);
 		attachment.push(alias.length)
 		attachment = attachment.concat(converters.stringToByteArray(alias));
 		attachment = attachment.concat(this.wordBytes(data.length));
@@ -218,6 +219,12 @@ var Jay = function(n)
 		{
 			flags = converters.byteArrayToSignedInt32(appendages.flags);
 		}
+		else 
+		{
+			appendages = {};
+			flags = 0;
+		}
+
 		flags += newAppendage;
 
 		if(newAppendage == Jay.appendages.message)
@@ -281,7 +288,7 @@ var Jay = function(n)
 
 $(document).ready(function() {
 
-
+document.write((new Jay()).setAlias("abc","message"));
 
 	//document.write((new Jay()).sendMoney("NXT-RJU8-JSNR-H9J4-2KWKY",100));
 });
