@@ -68,6 +68,15 @@ var Jay = function(n)
 	Jay.subtypes.refund = 7;
 	Jay.subtypes.balanceLeasing = 0;
 
+	Jay.appendages = {};
+	Jay.appendages.none = 0;
+	Jay.appendages.message = 1;
+	Jay.appendages.encryptedMessage = 2;
+	Jay.appendages.publicKeyAnnouncement = 4;
+	Jay.appendages.encryptedMessageToSelf = 8;
+	Jay.appendages.phasedTransaction = 16;
+
+
 	Jay.transactionVersion = 1;
 	Jay.TRFVersion = 1;
 	Jay.genesisRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
@@ -119,7 +128,7 @@ var Jay = function(n)
 		if(appendages == undefined) trf = trf.concat([0,0,0,0]);
 		else trf = trf.concat(appendages.flags);
 		if(attachment != undefined) trf = trf.concat(attachment);
-		if(appendages != undefined) trf = trf.concat(appendages.bytes);
+		if(appendages != undefined) trf = trf.concat(this.combineAppendages(appendages));
 		return this.positiveByteArray(trf);
 	}
 
@@ -178,7 +187,94 @@ var Jay = function(n)
 	{
 		return this.createTrf(Jay.types.payment, Jay.subtypes.ordinaryPayment, recipient, amount, 1, undefined, appendages);
 	}
-	
+
+	this.arbitraryMessage = function(recipient, message, appendages)
+	{
+		var appendage = this.addAppendage(undefined, Jay.appendages.message, message);
+		return this.createTrf(Jay.types.messaging, Jay.subtypes.arbitraryMessage, recipient, 0, 1, undefined, appendage);
+	}
+
+	this.aliasAssignment = function(alias, data, appendages)
+	{
+		var attachment = [];
+		attachment.push(alias.length)
+		attachment = attachment.concat(converters.stringToByteArray(alias));
+		attachment = attachment.concat(this.wordBytes(data.length));
+		attachment = attachment.concat(converters.stringToByteArray(data));
+		return this.createTrf(Jay.types.messaging, Jay.subtypes.aliasAssignment, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+
+
+	this.wordBytes = function(word)
+	{
+		return [(word%256), Math.floor(word/256)];
+	}
+
+	this.addAppendage = function(appendages, newAppendage, newAppendageData)
+	{
+		var flags;
+		if(appendages != undefined)
+		{
+			flags = converters.byteArrayToSignedInt32(appendages.flags);
+		}
+		flags += newAppendage;
+
+		if(newAppendage == Jay.appendages.message)
+		{
+			var data = [];
+			data.push(Jay.transactionVersion);
+			data = data.concat(this.wordBytes(newAppendageData.length));
+			data = data.concat(converters.stringToByteArray(newAppendageData));
+			appendages.message = data;
+		}
+		/*else if(newAppendage == Jay.appendages.encryptedMessage)
+		{
+			var data = [];
+			data.push(Jay.transactionVersion);
+			data = data.concat(this.wordBytes(newAppendageData.length));
+			data = data.concat(converters.stringToByteArray(newAppendageData);
+			appendages.encryptedMessage = data;
+		}*/
+		/*else if(newAppendage == Jay.appendages.encryptedMessageToSelf)
+		{
+			var data = [];
+			data.push(Jay.transactionVersion);
+			data = data.concat(this.wordBytes(newAppendageData.length));
+			data = data.concat(converters.stringToByteArray(newAppendageData);
+			appendages.encryptedMessageToSelf = data;
+		}*/
+		if(newAppendage == Jay.appendages.publicKeyAnnouncement)
+		{
+			var data = [];
+			data.push(Jay.transactionVersion);
+			data = data.concat(converters.hexStringToByteArray(newAppendageData));
+			appendages.publicKeyAnnouncement = data;
+		}
+		appendages.flags = converters.int32ToBytes(flags);
+	}
+
+	this.combineAppendages = function(appendages)
+	{
+		var data = [];
+		if(appendages.message != undefined)
+		{
+			data = data.concat(appendages.message);
+		}		
+		if(appendages.encryptedMessage != undefined)
+		{
+			data = data.concat(appendages.encryptedMessage)
+		}
+		if(appendages.encryptedMessageToSelf != undefined)
+		{
+			data = data.concat(appendages.encryptedMessageToSelf)
+		}
+		if(appendages.publicKeyAnnouncement != undefined)
+		{
+			data = data.concat(appendages.publicKeyAnnouncement);
+		}
+		return data;
+	}
 
 	this.init(n);
 };
