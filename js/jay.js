@@ -35,7 +35,7 @@ var Jay = function(n)
 	Jay.types = {};
 	Jay.subtypes = {};
 
-	Jay.oneNXT = 100000000;	
+	Jay.oneNxt = 100000000;	
 	Jay.types.payment = 0;
 	Jay.types.messaging = 1;
 	Jay.types.asset = 2;
@@ -70,25 +70,122 @@ var Jay = function(n)
 
 	Jay.transactionVersion = 1;
 	Jay.TRFVersion = 1;
+	Jay.genesisRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
 
-	Jay.epoch = new Date(2013, 11, 24, 12, 0, 0, 0).UTC();
+	Jay.epoch = 1234
 
-	this.createTrfBytes = function(type, subtype, recipient, amount, fee, flags, attachment, appendages)
+
+	this.pad = function(length, val) 
+	{
+    	var array = [];
+    	for (var i = 0; i < length; i++) 
+    	{
+        	array[i] = val;
+    	}
+    	return array;
+	}
+
+	this.positiveByteArray = function(byteArray)
+	{
+		return converters.hexStringToByteArray(converters.byteArrayToHexString(byteArray));
+	}
+
+	this.rsToBytes = function(rs)
+	{
+		var rec = new NxtAddress();
+		rec.set(rs);
+		var recip = (new BigInteger(rec.account_id())).toByteArray().reverse();
+		if(recip.length == 9) recip = recip.slice(0, 8);
+		while(recip.length < 8) recip = recip.concat(this.pad(1, 0));
+		return recip;
+	}
+	this.numberToBytes = function(num)
+	{
+		var bytes = (new BigInteger((num*100000000).toString())).toByteArray().reverse();
+		if(bytes.length == 9) bytes = bytes.slice(0, 8);
+		while(bytes.length < 8) bytes = bytes.concat(this.pad(1, 0));
+		return bytes;
+	}
+
+	this.createTrfBytes = function(type, subtype, recipient, amount, fee, attachment, appendages)
 	{
 		var trf = [];
 		trf.push(Jay.TRFVersion);
 		trf.push(type);
-		trf.push(subtype + version << 4);
-		
+		trf.push(subtype + Jay.transactionVersion << 4);
+		trf = trf.concat(this.rsToBytes(recipient));
+		trf = trf.concat(this.numberToBytes(amount));
+		trf = trf.concat(this.numberToBytes(fee));
+		if(appendages == undefined) trf = trf.concat([0,0,0,0]);
+		else trf = trf.concat(appendages.flags);
+		if(attachment != undefined) trf = trf.concat(attachment);
+		if(appendages != undefined) trf = trf.concat(appendages.bytes);
+		return this.positiveByteArray(trf);
 	}
 
-	this.sendMoney()
+	this.createTrf = function(type, subtype, recipient, amount, fee, attachment, appendages)
+	{
+		var trfBytes = this.createTrfBytes(type, subtype, recipient, amount, fee, attachment, appendages);
+		return this.finishTrf(trfBytes);
+	}
+
+	this.bytesToBigInteger = function(bytes)
+	{
+		var bi = new BigInteger("0");
+		for(var a=0; a<bytes.length; a++)
+		{
+			bi = bi.multiply(new BigInteger("256"));
+			//var term = (new BigInteger(bytes[a].toString())).multiply(multiplier);
+			bi = bi.add(new BigInteger(bytes[a].toString()));
+
+		}
+		return bi;
+	}
+
+	this.base62_encode = function(bytes) 
+	{
+		var value = this.bytesToBigInteger(bytes);
+	    var buf = "";
+	    while ((new BigInteger("0")).compareTo(value) < 0) {
+	      	var divRem = value.divideAndRemainder(new BigInteger("62"));
+	      	var remainder = divRem[1].intValue();
+	      
+	      	if (remainder < 10) 
+	     	{
+	        	buf += String.fromCharCode(remainder + '0'.charCodeAt(0));
+	      	}
+	      	else if (remainder < 10 + 26) 
+	     	{
+	      		buf += String.fromCharCode(remainder + 'A'.charCodeAt(0) - 10);
+	      	} 
+	      	else 
+	      	{
+	        	buf += String.fromCharCode(remainder + 'a'.charCodeAt(0) - 10 - 26);
+	      	}
+	      
+	      	value = divRem[0];
+	    }
+	    buf = buf.split("").reverse().join("");
+	    return buf;
+	  }
+
+	this.finishTrf = function(trfBytes)
+	{
+		return "TX_" + this.base62_encode(trfBytes);
+	}
+
+	this.sendMoney = function(recipient, amount, appendages)
+	{
+		return this.createTrf(Jay.types.payment, Jay.subtypes.ordinaryPayment, recipient, amount, 1, undefined, appendages);
+	}
 	
 
 	this.init(n);
 };
 
 $(document).ready(function() {
-	var jnxt = new Jay("jnxt.org");
-	console.log(jnxt.resolveNode("jnxt.org"))
+
+
+
+	//document.write((new Jay()).sendMoney("NXT-RJU8-JSNR-H9J4-2KWKY",100));
 });

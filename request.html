@@ -4,6 +4,9 @@
 <script src="util/crypto/enc-base64-min.js"></script>
 <script src="util/converters.js"></script>
 <script src="util/jssha256.js"></script>
+<script src="util/jsbn.js"></script>
+<script src="util/jsbn2.js"></script>
+<script src="util/nxtaddress.js"></script>
 
 <script src="js/jay.js"></script>
 <script>
@@ -42,11 +45,20 @@ $(document).ready(function(){
 	});
 
 })*/
-
-
 </script>
-
-<pre></pre>
+<script src="util/jquery.js"></script>
+<script src="js/jay.js"></script>
+<script>
+$("document").ready(function() {
+    $("button").click(function() {
+        $("span").text((new Jay()).sendMoney($("#acc").val(), $("#amt").val()));
+    })
+})
+</script>
+amount: <input id="amt" type="text"> <br/>
+recipient: <input id="acc" type="text">
+<button type="button">Create Tx</button><br/>
+<span></span>
 
 <!-- 
     // nxt decimals:
