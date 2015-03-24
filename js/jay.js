@@ -1,32 +1,31 @@
 // lets start this shit up
 
-var Jay = function(n) 
-{
+var Jay = {};
 	"use strict";
 	Jay.commonNodes = ["69.163.40.132","jnxt.org","nxt.noip.me","23.88.59.40","162.243.122.251"];
 
-	this.requestType;
+	Jay.requestType;
 	Jay.requestTypes = {};
 	Jay.requestTypes.singleNode = 0;
 	Jay.requestTypes.multiNode = 1;
 	Jay.requestTypes.autoNode = 2;
-	this.txType;
-	this.singleNode;
-	this.isTestnet = false;
-	this.init = function(node)
+	Jay.txType;
+	Jay.singleNode;
+	Jay.isTestnet = false;
+	Jay.init = function(node)
 	{
 		if(typeof(node) == "string")
 		{
-			this.requestType = Jay.requestTypes.singleNode;
-			this.singleNode = node;
+			Jay.requestType = Jay.requestTypes.singleNode;
+			Jay.singleNode = node;
 		}
 	}
 
-	this.resolveNode = function(nodeName)
+	Jay.resolveNode = function(nodeName)
 	{
 		var name = "http://";
 		name += nodeName;
-		if(this.isTestnet) name += ":6876";
+		if(Jay.isTestnet) name += ":6876";
 		else name += ":7876";
 		name += "/nxt";
 		return name;
@@ -84,7 +83,7 @@ var Jay = function(n)
 	Jay.epoch = 1234
 
 
-	this.pad = function(length, val) 
+	Jay.pad = function(length, val) 
 	{
     	var array = [];
     	for (var i = 0; i < length; i++) 
@@ -94,51 +93,51 @@ var Jay = function(n)
     	return array;
 	}
 
-	this.positiveByteArray = function(byteArray)
+	Jay.positiveByteArray = function(byteArray)
 	{
 		return converters.hexStringToByteArray(converters.byteArrayToHexString(byteArray));
 	}
 
-	this.rsToBytes = function(rs)
+	Jay.rsToBytes = function(rs)
 	{
 		var rec = new NxtAddress();
 		rec.set(rs);
 		var recip = (new BigInteger(rec.account_id())).toByteArray().reverse();
 		if(recip.length == 9) recip = recip.slice(0, 8);
-		while(recip.length < 8) recip = recip.concat(this.pad(1, 0));
+		while(recip.length < 8) recip = recip.concat(Jay.pad(1, 0));
 		return recip;
 	}
-	this.numberToBytes = function(num)
+	Jay.numberToBytes = function(num)
 	{
 		var bytes = (new BigInteger((num*100000000).toString())).toByteArray().reverse();
 		if(bytes.length == 9) bytes = bytes.slice(0, 8);
-		while(bytes.length < 8) bytes = bytes.concat(this.pad(1, 0));
+		while(bytes.length < 8) bytes = bytes.concat(Jay.pad(1, 0));
 		return bytes;
 	}
 
-	this.createTrfBytes = function(type, subtype, recipient, amount, fee, attachment, appendages)
+	Jay.createTrfBytes = function(type, subtype, recipient, amount, fee, attachment, appendages)
 	{
 		var trf = [];
 		trf.push(Jay.TRFVersion);
 		trf.push(type);
 		trf.push((subtype << 4) + (Jay.transactionVersion));
-		trf = trf.concat(this.rsToBytes(recipient));
-		trf = trf.concat(this.numberToBytes(amount));
-		trf = trf.concat(this.numberToBytes(fee));
+		trf = trf.concat(Jay.rsToBytes(recipient));
+		trf = trf.concat(Jay.numberToBytes(amount));
+		trf = trf.concat(Jay.numberToBytes(fee));
 		if(appendages == undefined) trf = trf.concat([0,0,0,0]);
 		else trf = trf.concat(appendages.flags);
 		if(attachment != undefined) trf = trf.concat(attachment);
-		if(appendages != undefined) trf = trf.concat(this.combineAppendages(appendages));
-		return this.positiveByteArray(trf);
+		if(appendages != undefined) trf = trf.concat(Jay.combineAppendages(appendages));
+		return Jay.positiveByteArray(trf);
 	}
 
-	this.createTrf = function(type, subtype, recipient, amount, fee, attachment, appendages)
+	Jay.createTrf = function(type, subtype, recipient, amount, fee, attachment, appendages)
 	{
-		var trfBytes = this.createTrfBytes(type, subtype, recipient, amount, fee, attachment, appendages);
-		return this.finishTrf(trfBytes);
+		var trfBytes = Jay.createTrfBytes(type, subtype, recipient, amount, fee, attachment, appendages);
+		return Jay.finishTrf(trfBytes);
 	}
 
-	this.bytesToBigInteger = function(bytes)
+	Jay.bytesToBigInteger = function(bytes)
 	{
 		var bi = new BigInteger("0");
 		for(var a=0; a<bytes.length; a++)
@@ -151,9 +150,9 @@ var Jay = function(n)
 		return bi;
 	}
 
-	this.base62_encode = function(bytes) 
+	Jay.base62_encode = function(bytes) 
 	{
-		var value = this.bytesToBigInteger(bytes);
+		var value = Jay.bytesToBigInteger(bytes);
 	    var buf = "";
 	    while ((new BigInteger("0")).compareTo(value) < 0) {
 	      	var divRem = value.divideAndRemainder(new BigInteger("62"));
@@ -178,41 +177,42 @@ var Jay = function(n)
 	    return buf;
 	  }
 
-	this.finishTrf = function(trfBytes)
+	Jay.finishTrf = function(trfBytes)
 	{
-		return "TX_" + this.base62_encode(trfBytes);
+		return "TX_" + Jay.base62_encode(trfBytes);
 	}
 
-	this.sendMoney = function(recipient, amount, appendages)
+	Jay.sendMoney = function(recipient, amount, appendages)
 	{
-		return this.createTrf(Jay.types.payment, Jay.subtypes.ordinaryPayment, recipient, amount, 1, undefined, appendages);
+		return Jay.createTrf(Jay.types.payment, Jay.subtypes.ordinaryPayment, recipient, amount, 1, undefined, appendages);
 	}
 
-	this.sendMessage = function(recipient, message, appendages)
+	Jay.sendMessage = function(recipient, message, appendages)
 	{
-		var appendage = this.addAppendage(undefined, Jay.appendages.message, message);
-		return this.createTrf(Jay.types.messaging, Jay.subtypes.arbitraryMessage, recipient, 0, 1, undefined, appendage);
+		var appendage = Jay.addAppendage(undefined, Jay.appendages.message, message);
+		alert(appendage.flags)
+		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.arbitraryMessage, recipient, 0, 1, undefined, appendage);
 	}
 
-	this.setAlias = function(alias, data, appendages)
+	Jay.setAlias = function(alias, data, appendages)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment.push(alias.length)
 		attachment = attachment.concat(converters.stringToByteArray(alias));
-		attachment = attachment.concat(this.wordBytes(data.length));
+		attachment = attachment.concat(Jay.wordBytes(data.length));
 		attachment = attachment.concat(converters.stringToByteArray(data));
-		return this.createTrf(Jay.types.messaging, Jay.subtypes.aliasAssignment, Jay.genesisRS, 0, 1, attachment, appendages);
+		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasAssignment, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
 
 
-	this.wordBytes = function(word)
+	Jay.wordBytes = function(word)
 	{
 		return [(word%256), Math.floor(word/256)];
 	}
 
-	this.addAppendage = function(appendages, newAppendage, newAppendageData)
+	Jay.addAppendage = function(appendages, newAppendage, newAppendageData)
 	{
 		var flags;
 		if(appendages != undefined)
@@ -231,7 +231,7 @@ var Jay = function(n)
 		{
 			var data = [];
 			data.push(Jay.transactionVersion);
-			data = data.concat(this.wordBytes(newAppendageData.length));
+			data = data.concat(Jay.wordBytes(newAppendageData.length));
 			data = data.concat(converters.stringToByteArray(newAppendageData));
 			appendages.message = data;
 		}
@@ -239,7 +239,7 @@ var Jay = function(n)
 		{
 			var data = [];
 			data.push(Jay.transactionVersion);
-			data = data.concat(this.wordBytes(newAppendageData.length));
+			data = data.concat(Jay.wordBytes(newAppendageData.length));
 			data = data.concat(converters.stringToByteArray(newAppendageData);
 			appendages.encryptedMessage = data;
 		}*/
@@ -247,7 +247,7 @@ var Jay = function(n)
 		{
 			var data = [];
 			data.push(Jay.transactionVersion);
-			data = data.concat(this.wordBytes(newAppendageData.length));
+			data = data.concat(Jay.wordBytes(newAppendageData.length));
 			data = data.concat(converters.stringToByteArray(newAppendageData);
 			appendages.encryptedMessageToSelf = data;
 		}*/
@@ -259,9 +259,10 @@ var Jay = function(n)
 			appendages.publicKeyAnnouncement = data;
 		}
 		appendages.flags = converters.int32ToBytes(flags);
+		return appendages;
 	}
 
-	this.combineAppendages = function(appendages)
+	Jay.combineAppendages = function(appendages)
 	{
 		var data = [];
 		if(appendages.message != undefined)
@@ -283,12 +284,12 @@ var Jay = function(n)
 		return data;
 	}
 
-	this.init(n);
-};
-
 $(document).ready(function() {
 
-document.write((new Jay()).setAlias("abc","message"));
-
+document.write(Jay.sendMessage("NXT-RJU8-JSNR-H9J4-2KWKY","this is a really long message with many characters for the purpose of testing how the appendage code can handle it as well as the code that deals with parsing it."));
 	//document.write((new Jay()).sendMoney("NXT-RJU8-JSNR-H9J4-2KWKY",100));
+	var a = 1 + (1 << 5);
+	console.log(5 >> 1);
+	var pos = 4;
+	console.log((a >> pos)%2);
 });
