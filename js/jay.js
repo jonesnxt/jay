@@ -120,7 +120,8 @@ var Jay = {};
 		var trf = [];
 		trf.push(Jay.TRFVersion);
 		trf.push(type);
-		trf.push((subtype << 4) + (Jay.transactionVersion));
+		trf.push((subtype) + (Jay.transactionVersion << 4));
+		alert(1 << 4);
 		trf = trf.concat(Jay.rsToBytes(recipient));
 		trf = trf.concat(Jay.numberToBytes(amount));
 		trf = trf.concat(Jay.numberToBytes(fee));
@@ -287,6 +288,7 @@ var Jay = {};
 $(document).ready(function() {
 
 document.write(Jay.sendMessage("NXT-RJU8-JSNR-H9J4-2KWKY","this is a really long message with many characters for the purpose of testing how the appendage code can handle it as well as the code that deals with parsing it."));
+document.write("<br/>" + Jay.setAlias("aaaa","bbbb"));
 	//document.write((new Jay()).sendMoney("NXT-RJU8-JSNR-H9J4-2KWKY",100));
 	var a = 1 + (1 << 5);
 	console.log(5 >> 1);
