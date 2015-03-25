@@ -107,9 +107,10 @@ var Jay = {};
 		while(recip.length < 8) recip = recip.concat(Jay.pad(1, 0));
 		return recip;
 	}
+
 	Jay.numberToBytes = function(num)
 	{
-		var bytes = (new BigInteger((num*100000000).toString())).toByteArray().reverse();
+		var bytes = (new BigInteger((num).toString())).toByteArray().reverse();
 		if(bytes.length == 9) bytes = bytes.slice(0, 8);
 		while(bytes.length < 8) bytes = bytes.concat(Jay.pad(1, 0));
 		return bytes;
@@ -121,10 +122,9 @@ var Jay = {};
 		trf.push(Jay.TRFVersion);
 		trf.push(type);
 		trf.push((subtype) + (Jay.transactionVersion << 4));
-		alert(1 << 4);
 		trf = trf.concat(Jay.rsToBytes(recipient));
-		trf = trf.concat(Jay.numberToBytes(amount));
-		trf = trf.concat(Jay.numberToBytes(fee));
+		trf = trf.concat(Jay.numberToBytes(amount*Jay.oneNxt));
+		trf = trf.concat(Jay.numberToBytes(fee*Jay.oneNxt));
 		if(appendages == undefined) trf = trf.concat([0,0,0,0]);
 		else trf = trf.concat(appendages.flags);
 		if(attachment != undefined) trf = trf.concat(attachment);
@@ -190,8 +190,7 @@ var Jay = {};
 
 	Jay.sendMessage = function(recipient, message, appendages)
 	{
-		var appendage = Jay.addAppendage(undefined, Jay.appendages.message, message);
-		alert(appendage.flags)
+		var appendage = Jay.addAppendage(Jay.appendages.message, message, appendages);
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.arbitraryMessage, recipient, 0, 1, undefined, appendage);
 	}
 
@@ -206,14 +205,70 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasAssignment, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
+	Jay.setAccountInfo = function(name, description, description, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment.push(name.length);
+		attachment = attachment.concat(converters.stringToByteArray(name));
+		attachment = attachment.concat(Jay.wordBytes(description.length));
+		attachment = attachment.concat(converters.stringToByteArray(data));
+		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.accountInfo, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	Jay.transferAsset = function(recipient, assetId, quantityQNT, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(assetId));
+		attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
+		return Jay.createTrf(Jay.types.asset, Jay.subtypes.assetTransfer, recipient, 0, 1, attachment, appendages);
+	}
+
+	Jay.placeAskOrder = function(assetId, quantityQNT, price, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(assetId));
+		attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
+		attachment = attachment.concat(Jay.numberToBytes(price*Jay.oneNxt));
+		return Jay.createTrf(Jay.types.asset, Jay.subtypes.askOrderPlacement, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	Jay.placeBidOrder = function(assetId, quantityQNT, price, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(assetId));
+		attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
+		attachment = attachment.concat(Jay.numberToBytes(price*Jay.oneNxt));
+		return Jay.createTrf(Jay.types.asset, Jay.subtypes.bidOrderPlacement, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	Jay.cancelAskOrder = function(orderId, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(orderId));
+		return Jay.createTrf(Jay.types.asset, Jay.subtypes.askOrderCancellation, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	Jay.cancelBidOrder = function(orderId, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(orderId));
+		return Jay.createTrf(Jay.types.asset, Jay.subtypes.bidOrderCancellation, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
 
 
 	Jay.wordBytes = function(word)
 	{
-		return [(word%256), Math.floor(word/256)];
+		return [Math.floor(word%256), Math.floor(word/256)];
 	}
 
-	Jay.addAppendage = function(appendages, newAppendage, newAppendageData)
+	Jay.addAppendage = function(newAppendage, newAppendageData, appendages)
 	{
 		var flags;
 		if(appendages != undefined)
@@ -233,6 +288,8 @@ var Jay = {};
 			var data = [];
 			data.push(Jay.transactionVersion);
 			data = data.concat(Jay.wordBytes(newAppendageData.length));
+			data.push(0);
+			data.push(128);
 			data = data.concat(converters.stringToByteArray(newAppendageData));
 			appendages.message = data;
 		}
@@ -287,8 +344,9 @@ var Jay = {};
 
 $(document).ready(function() {
 
-document.write(Jay.sendMessage("NXT-RJU8-JSNR-H9J4-2KWKY","this is a really long message with many characters for the purpose of testing how the appendage code can handle it as well as the code that deals with parsing it."));
-document.write("<br/>" + Jay.setAlias("aaaa","bbbb"));
+document.write(Jay.sendMessage("NXT-RJU8-JSNR-H9J4-2KWKY","yes", Jay.addAppendage(Jay.appendages.publicKeyAnnouncement, "3a74c6848c01a0d7deb2eda978366ad29e366dc3fdea11868a06cc2677139213")));
+document.write("<br/>" + Jay.placeBidOrder("17435996739008103286", 100, 10.25));
+
 	//document.write((new Jay()).sendMoney("NXT-RJU8-JSNR-H9J4-2KWKY",100));
 	var a = 1 + (1 << 5);
 	console.log(5 >> 1);
