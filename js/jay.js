@@ -66,6 +66,15 @@ var Jay = {};
 	Jay.subtypes.feedback = 6;
 	Jay.subtypes.refund = 7;
 	Jay.subtypes.balanceLeasing = 0;
+	Jay.subtypes.currencyIssuance = 0;
+	Jay.subtypes.reserveIncrease = 1;
+	Jay.subtypes.reserveClaim = 2;
+	Jay.subtypes.currencyTransfer = 3;
+	Jay.subtypes.exchangeOffer = 4;
+	Jay.subtypes.exchangeBuy = 5;
+	Jay.subtypes.exchangeSell = 6;
+	Jay.subtypes.currencyMinting = 7;
+	Jay.subtypes.currencyDeletion = 8;
 
 	Jay.appendages = {};
 	Jay.appendages.none = 0;
@@ -261,7 +270,77 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.asset, Jay.subtypes.bidOrderCancellation, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
+	Jay.dgsPriceChange = function(itemId, newPrice, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(itemId));
+		attachment = attachment.concat(Jay.numberToBytes(newPrice*Jay.oneNxt));
+		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.priceChange, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
 
+	Jay.dgsQuantityChange = function(itemId, deltaQuantity, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(itemId));
+		attachment = attachment.concat(converters.int32ToBytes(deltaQuantity));
+		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.quantityChange, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	Jay.dgsPurchase = function(itemId, quantity, price, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion)
+		attachment = attachment.concat(Jay.numberToBytes(itemId));
+		attachment = attachment.concat(converters.int32ToBytes(quantity));
+		attachment = attachment.concat(Jay.numberToBytes(price*Jay.oneNxt));
+		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.purchase, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	Jay.dgsDelivery = function(itemId, discount)
+	{
+		var attachment = [];
+	}
+
+	Jay.leaseBalance = function(recipient, duration, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.wordBytes(duration));
+		return Jay.createTrf(Jay.types.accountControl, Jay.subtypes.balanceLeasing, recipient, 0, 1, attachment, appendages);
+	}
+
+	Jay.currencyReserveIncrease = function(currencyId, amountPerUnit, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(currencyId));
+		attachment = attachment.concat(amountPerUnit*Jay.oneNxt);
+		return Jay.createTrf(Jay.types.monetarySystem, Jay.subtypes.reserveIncrease, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	Jay.transferCurrency = function(recipient, currencyId, amountQNT, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(currencyId));
+		attachment = attachment.concat(Jay.numberToBytes(amountQNT));
+		return Jay.createTrf(Jay.types.monetarySystem, Jay.subtyes.currencyTransfer, recipient, 0, 1, attachment, appendages)
+	}
+
+	Jay.currencyMint = function(currencyId, nonce, units, counter, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(currencyId));
+		attachment = attachment.concat(Jay.numberToBytes(nonce));
+		attachment = attachment.concat(Jay.numberToBytes(units));
+		attachment = attachment.concat(Jay.numberToBytes(counter));
+		return Jay.createTrf(Jay.types.monetarySystem, Jay.subtypes.currencyMinting, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	
 
 	Jay.wordBytes = function(word)
 	{
