@@ -117,6 +117,26 @@ var Jay = {};
 		return recip;
 	}
 
+	function byteArrayToBigInteger(byteArray, startIndex) {
+		var value = new BigInteger("0", 10);
+		var temp1, temp2;
+		for (var i = byteArray.length - 1; i >= 0; i--) {
+			temp1 = value.multiply(new BigInteger("256", 10));
+			temp2 = temp1.add(new BigInteger(byteArray[i].toString(10), 10));
+			value = temp2;
+		}
+
+		return value;
+	}
+
+	Jay.bytesToRs = function(bytes)
+	{
+		var accid = (byteArrayToBigInteger(bytes)).toString();
+		var rec = new NxtAddress();
+		rec.set(accid);
+		return rec.toString();
+	}
+
 	Jay.numberToBytes = function(num)
 	{
 		var bytes = (new BigInteger((num).toString())).toByteArray().reverse();
@@ -340,8 +360,6 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.monetarySystem, Jay.subtypes.currencyMinting, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
-	
-
 	Jay.wordBytes = function(word)
 	{
 		return [Math.floor(word%256), Math.floor(word/256)];
@@ -427,8 +445,6 @@ document.write(Jay.sendMessage("NXT-RJU8-JSNR-H9J4-2KWKY","yes", Jay.addAppendag
 document.write("<br/>" + Jay.placeBidOrder("17435996739008103286", 100, 10.25));
 
 	//document.write((new Jay()).sendMoney("NXT-RJU8-JSNR-H9J4-2KWKY",100));
-	var a = 1 + (1 << 5);
-	console.log(5 >> 1);
-	var pos = 4;
-	console.log((a >> pos)%2);
+	console.log(Jay.bytesToRs(converters.hexStringToByteArray("1df9e52b85d46f9a")));
+	console.log(Jay.bytesToRs([0,0,0,0,0,0,0,0]));
 });
