@@ -1,24 +1,106 @@
-// lets start this shit up
+/*
+ * jQuery.ajaxMultiQueue - A queue for multiple concurrent ajax requests
+ * (c) 2013 Amir Grozki
+ * Dual licensed under the MIT and GPL licenses.
+ *
+ * Based on jQuery.ajaxQueue
+ * (c) 2011 Corey Frang
+ *
+ * Requires jQuery 1.5+
+ */
+(function($) {
+	$.ajaxMultiQueue = function(n) {
+		return new MultiQueue(~~n);
+	};
+
+	function MultiQueue(number) {
+		var queues, i,
+			current = 0;
+
+		if (!queues) {
+			queues = new Array(number);
+
+			for (i = 0; i < number; i++) {
+				queues[i] = $({});
+			}
+		}
+
+		function queue(ajaxOpts) {
+			var jqXHR,
+				dfd = $.Deferred(),
+				promise = dfd.promise();
+
+			queues[current].queue(doRequest);
+			current = (current + 1) % number;
+
+			function doRequest(next) {
+				if (ajaxOpts.currentPage && ajaxOpts.currentPage != NRS.currentPage) {
+					next();
+				} else if (ajaxOpts.currentSubPage && ajaxOpts.currentSubPage != NRS.currentSubPage) {
+					next();
+				} else {
+					jqXHR = $.ajax(ajaxOpts);
+
+					jqXHR.done(dfd.resolve)
+						.fail(dfd.reject)
+						.then(next, next);
+				}
+			}
+
+			return promise;
+		};
+
+		return {
+			queue: queue
+		};
+	}
+
+})(jQuery);
 
 var Jay = {};
-	"use strict";
+
 	Jay.commonNodes = ["69.163.40.132","jnxt.org","nxt.noip.me","23.88.59.40","162.243.122.251"];
 
-	Jay.requestType;
-	Jay.requestTypes = {};
-	Jay.requestTypes.singleNode = 0;
-	Jay.requestTypes.multiNode = 1;
-	Jay.requestTypes.autoNode = 2;
-	Jay.txType;
+	Jay.msTimeout = 1000;
+
+	Jay.requestMethods = {};
+	Jay.requestMethods.single = 0;
+	Jay.requestMethods.fastest = 1;
+	Jay.requestMethods.validate = 2;
+	Jay.requestMethods.cautious = 3;
+	Jay.requestMethods.default = Jay.requestMethods.validate;
+	Jay.requestMethod = Jay.requestMethods.default;
+
+	Jay.req = $.ajaxMultiQueue(6);
+
 	Jay.singleNode;
+	Jay.bestNodes = [];
 	Jay.isTestnet = false;
-	Jay.init = function(node)
+
+	Jay.queue = function(node, parameters, onSuccess, onFailure)
 	{
-		if(typeof(node) == "string")
-		{
-			Jay.requestType = Jay.requestTypes.singleNode;
-			Jay.singleNode = node;
-		}
+		var obj = {};
+		obj.url = Jay.resolveNode(node) + "?requestType="+parameters["requestType"];
+		obj.beforeSend = function(jqxhr, settings) {
+			jqxhr.node = node;
+			jqxhr.parameters = parameters;
+		};
+		obj.method = 'POST';
+		obj.success = onSuccess;
+		if(onFailure != undefined) obj.error = onFailure;
+		else obj.error = onSuccess;
+		obj.timeout = Jay.msTimeout;
+		Jay.req.queue(obj);
+	}
+
+	Jay.setNode = function(nodeName)
+	{
+		Jay.singleNode = nodeName;
+	}
+
+	Jay.setRequestMethod = function(requestMethod)
+	{
+		Jay.requestMethod = requestMethod;
 	}
 
 	Jay.resolveNode = function(nodeName)
@@ -29,6 +111,53 @@ var Jay = {};
 		else name += ":7876";
 		name += "/nxt";
 		return name;
+	}
+
+	Jay.nodeScan = function(complete)
+	{
+		var counter = 0;
+		for(var a=0;a<Jay.commonNodes.length;a++)
+		{
+			Jay.queue(Jay.commonNodes[a], {"requestType":"getTime"}, function(resp, status, xhr) {
+				if(status == "success")
+				{
+					Jay.bestNodes.push(xhr.node);
+				}
+				counter++;
+				if(counter == Jay.commonNodes.length)
+				{
+					complete();
+				}
+			});
+		}
+	}
+
+	Jay.request = function(requestType, parameters, onSuccess, onFailure, requestMethod)
+	{
+		if(requestMethod == undefined) requestMethod = Jay.requestMethod;
+		parameters["requestType"] = requestType;
+
+		if(requestMethod == Jay.requestMethods.single)
+		{
+
+			if(Jay.singleNode == undefined) var useNode = Jay.commonNodes[0];
+			else var useNode = Jay.commonNodes[0];
+			Jay.queue(useNode, parameters, onSuccess, onFailure);
+		}
+		else if(requestMethod == Jay.requestMethods.fastest)
+		{
+			if(Jay.bestNodes.length == 0)
+			{
+					Jay.nodeScan(function() {
+						console.log(Jay.bestNodes);
+						Jay.queue(Jay.bestNodes[0], parameters, onSuccess, onFailure);
+					});
+			}
+			else
+			{
+				Jay.queue(Jay.bestNodes[0], parameters, onSuccess, onFailure);
+			}
+		}
 	}
 
 	Jay.types = {};
@@ -89,7 +218,12 @@ var Jay = {};
 	Jay.TRFVersion = 1;
 	Jay.genesisRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
 
-	Jay.epoch = 1234
+	Jay.epoch = 1385294400;
+
+	Jay.getNxtTime = function()
+	{
+		return Math.floor(Date.now() / 1000) - Jay.epoch;
+	}
 
 
 	Jay.pad = function(length, val) 
@@ -245,6 +379,39 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.accountInfo, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
+	Jay.sellAlias = function(alias, price, recpipient, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attechment.push(alias.length);
+		attachment = attachment.concat(converters.stringToByteArray(alias));
+		attachment = attachment.concat(Jay.numberToBytes(price*oneNxt));
+		if(recipient == undefined || recipient == "anyone" || recipient == "") return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasSell, [0,0,0,0,0,0,0,0], 0, 1, attachment, appendages);
+		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasSell, recipient, 0, 1, attachment, appendages);
+	}
+
+	Jay.buyAlias = function(alias, amount, seller, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment.push(alias.length);
+		attachment = attachment.concat(converters.stringToByteArray(alias));
+		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasBuy, recipient, amount, 1, attachment, appendages);
+	}
+
+	Jay.issueAsset = function(name, description, quantity, decimals, appendages)
+	{
+		var attachment = [];
+		attachment.push(transactionVersion);
+		attachment.push(name.length);
+		attachment = attachment.concat(converters.stringToByteArray(name));
+		attachment = attachment.concat(Jay.wordBytes(description.length));
+		attachment = attachment.concat(converters.stringToByteArray(description));
+		attachment = attachment.concat(Jay.numberToBytes(quantity*Math.pow(10,decimals)));
+		attachment.push(decimals);
+		return Jay.createTrf(Jay.types.asset, Jay.subtypes.assetIssuance, Jay.genesisRS, 0, 1000, attachment, appendages);
+	}
+
 	Jay.transferAsset = function(recipient, assetId, quantityQNT, appendages)
 	{
 		var attachment = [];
@@ -290,6 +457,29 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.asset, Jay.subtypes.bidOrderCancellation, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
+	Jay.dgsListing = function(name, description, tags, quantity, price, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.wordBytes(name.length));
+		attachment = attachment.concat(converters.stringToByteArray(name));
+		attachment = attachment.concat(Jay.wordBytes(description.length));
+		attachment = attachment.concat(converters.stringToByteArray(description));
+		attachment = attachment.concat(Jay.wordBytes(tags.length));
+		attachment = attachment.concat(converters.stringToByteArray(tags));
+		attachment = attachment.concat(converters.int32ToBytes(quantity));
+		attachment = attachment.concat(Jay.numberToBytes(price*Jay.oneNxt));
+		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.goodsListing, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	Jay.dgsDelisting = function(itemId, appendages)
+	{
+		var attachmetn = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(itemId));
+		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.goodsDelisting, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
 	Jay.dgsPriceChange = function(itemId, newPrice, appendages)
 	{
 		var attachment = [];
@@ -321,6 +511,24 @@ var Jay = {};
 	Jay.dgsDelivery = function(itemId, discount)
 	{
 		var attachment = [];
+	}
+
+	Jay.dgsFeedback = function(itemId, feedback, appendages)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(itemId));
+		appendages = Jay.addAppendage(Jay.appendages.arbitraryMessage, feedback, appendages);
+		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.feedback, Jay.genesisRS, 0, 1, attachment, appendages);
+	}
+
+	Jay.dgsRefund = function(purchaseId, refundAmount, appendages)
+	{
+		var attachment = [];
+		attachment.push(transactionVersion);
+		attachment = attachment.concat(Jay.numberToBytes(purchaseId));
+		attachment = attachment.concat(Jay.numberToBytes(refundAmount*Jay.oneNxt));
+		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.refund, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
 	Jay.leaseBalance = function(recipient, duration, appendages)
@@ -445,6 +653,9 @@ document.write(Jay.sendMessage("NXT-RJU8-JSNR-H9J4-2KWKY","yes", Jay.addAppendag
 document.write("<br/>" + Jay.placeBidOrder("17435996739008103286", 100, 10.25));
 
 	//document.write((new Jay()).sendMoney("NXT-RJU8-JSNR-H9J4-2KWKY",100));
-	console.log(Jay.bytesToRs(converters.hexStringToByteArray("1df9e52b85d46f9a")));
-	console.log(Jay.bytesToRs([0,0,0,0,0,0,0,0]));
+
+	Jay.setRequestMethod(Jay.requestMethods.fastest);
+	Jay.request("getTime", {}, function(data, a, b) {
+	 	console.log(JSON.stringify(data));
+	});
 });
