@@ -1,74 +1,24 @@
-<script src="util/jquery.js"></script>
-<script src="util/crypto/core-min.js"></script>
-<script src="util/crypto/sha256-min.js"></script>
-<script src="util/crypto/enc-base64-min.js"></script>
+<!--<script src="util/jquery.js"></script>
 <script src="util/converters.js"></script>
 <script src="util/jssha256.js"></script>
 <script src="util/jsbn.js"></script>
 <script src="util/jsbn2.js"></script>
 <script src="util/nxtaddress.js"></script>
-
+<script src="util/curve25519.js"></script>
 <script src="js/jay.js"></script>
-<script>
-/*console.log(typeof("12"))
-function getUrlParameter(sParam)
-{
-    var sPageURL = window.location.search.substring(1);
-    var sURLVariables = sPageURL.split('&');
-    for (var i = 0; i < sURLVariables.length; i++) 
-    {
-        var sParameterName = sURLVariables[i].split('=');
-        if (sParameterName[0] == sParam) 
-        {
-            return sParameterName[1];
-        }
-    }
-}          
-
-function getRequests() {
-    var s1 = location.search.substring(1, location.search.length).split('&'),
-        r = {}, s2, i;
-    for (i = 0; i < s1.length; i += 1) {
-        s2 = s1[i].split('=');
-        r[decodeURIComponent(s2[0]).toLowerCase()] = decodeURIComponent(s2[1]);
-    }
-    return r;
-};
-
-$(document).ready(function(){
-	Jay.conf.init(function() {
-    Jay.request.init();
-	Jay.request.nxtGet(getUrlParameter("requestType"), getRequests(), function(response) {
-		$("pre").text(JSON.stringify(response));
-
-	});
-	});
-
-})*/
-</script>
 <script src="util/jquery.js"></script>
-<script src="js/jay.js"></script>
+<script src="js/jay.js"></script>-->
+<script src="util/jquery.js"></script>
+<script src="jay.min.js"></script>
 <script>
 $("document").ready(function() {
     $("button").click(function() {
-        $("span").text((new Jay()).sendMoney($("#acc").val(), $("#amt").val()));
+        $("span").text(Jay.sendMoney($("#acc").val(), $("#amt").val()));
     })
 })
+console.log(Jay.createToken("abc","123"));
 </script>
 amount: <input id="amt" type="text"> <br/>
 recipient: <input id="acc" type="text">
 <button type="button">Create Tx</button><br/>
 <span></span>
-
-<!-- 
-    // nxt decimals:
-    // 0.00000001 = quant, QNT
-    // 0.000001.00 = nxtlet, XNL
-    // 0.001.000.00 = mnxt, MNT
-    // 0.01.000000 = nxtcent NXC
-    // 1.00000000 = nxt, NXT
-    // 1000. = knxt = KNXT
-    // 1000000. = mnxt = MNXT
-    // 1000000000 = fnxt = FNXT
-
-    -->
