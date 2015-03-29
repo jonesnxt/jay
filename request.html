@@ -1,4 +1,4 @@
-<!--<script src="util/jquery.js"></script>
+<script src="util/jquery.js"></script>
 <script src="util/converters.js"></script>
 <script src="util/jssha256.js"></script>
 <script src="util/jsbn.js"></script>
@@ -6,17 +6,13 @@
 <script src="util/nxtaddress.js"></script>
 <script src="util/curve25519.js"></script>
 <script src="js/jay.js"></script>
-<script src="util/jquery.js"></script>
-<script src="js/jay.js"></script>-->
-<script src="util/jquery.js"></script>
-<script src="jay.min.js"></script>
 <script>
 $("document").ready(function() {
     $("button").click(function() {
         $("span").text(Jay.sendMoney($("#acc").val(), $("#amt").val()));
     })
 })
-console.log(Jay.createToken("abc","123"));
+Jay.request("getAccount", {"account":"NXT-RJU8-JSNR-H9J4-2KWKY"}, function(data) {console.log(data)})
 </script>
 amount: <input id="amt" type="text"> <br/>
 recipient: <input id="acc" type="text">

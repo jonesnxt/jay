@@ -68,7 +68,7 @@ var Jay = {};
 	Jay.requestMethods.fastest = 1;
 	Jay.requestMethods.validate = 2;
 	Jay.requestMethods.cautious = 3;
-	Jay.requestMethods.default = Jay.requestMethods.validate;
+	Jay.requestMethods.default = Jay.requestMethods.fastest;
 	Jay.requestMethod = Jay.requestMethods.default;
 
 	Jay.req = $.ajaxMultiQueue(6);
@@ -80,7 +80,8 @@ var Jay = {};
 	Jay.queue = function(node, parameters, onSuccess, onFailure)
 	{
 		var obj = {};
-		obj.url = Jay.resolveNode(node) + "?requestType="+parameters["requestType"];
+		obj.url = Jay.resolveNode(node);
+		obj.data = parameters;
 		obj.beforeSend = function(jqxhr, settings) {
 			jqxhr.node = node;
 			jqxhr.parameters = parameters;
@@ -149,7 +150,6 @@ var Jay = {};
 			if(Jay.bestNodes.length == 0)
 			{
 					Jay.nodeScan(function() {
-						console.log(Jay.bestNodes);
 						Jay.queue(Jay.bestNodes[0], parameters, onSuccess, onFailure);
 					});
 			}
@@ -339,6 +339,41 @@ var Jay = {};
 		return recip;
 	}
 
+	Jay.secretPhraseToPublicKey = function(secretPhrase) 
+	{
+		var secretPhraseBytes = converters.stringToByteArray(secretPhrase);
+		var digest = simpleHash(secretPhraseBytes);
+		return curve25519.keygen(digest).p;
+	}
+
+	Jay.publicKeyToAccountId = function(publicKey, RSFormat)
+	{
+		var hex = converters.hexStringToByteArray(publicKey);
+
+		_hash.init();
+		_hash.update(hex);
+
+		var account = _hash.getBytes();
+
+		account = converters.byteArrayToHexString(account);
+
+		var slice = (converters.hexStringToByteArray(account)).slice(0, 8);
+
+		var accountId = byteArrayToBigInteger(slice).toString();
+
+		if (RSFormat) {
+			var address = new NxtAddress();
+
+			if (address.set(accountId)) {
+				return address.toString();
+			} else {
+				return "";
+			}
+		} else {
+			return accountId;
+		}
+	}
+
 	Jay.numberToBytes = function(num)
 	{
 		var bytes = (new BigInteger((num).toString())).toByteArray().reverse();
@@ -354,8 +389,8 @@ var Jay = {};
 		trf.push(type);
 		trf.push((subtype) + (Jay.transactionVersion << 4));
 		trf = trf.concat(Jay.rsToBytes(recipient));
-		trf = trf.concat(Jay.numberToBytes(amount*Jay.oneNxt));
-		trf = trf.concat(Jay.numberToBytes(fee*Jay.oneNxt));
+		trf = trf.concat(Jay.numberToBytes(Math.round(amount*Jay.oneNxt)));
+		trf = trf.concat(Jay.numberToBytes(Math.round(fee*Jay.oneNxt)));
 		if(appendages == undefined) trf = trf.concat([0,0,0,0]);
 		else trf = trf.concat(appendages.flags);
 		if(attachment != undefined) trf = trf.concat(attachment);
@@ -436,7 +471,7 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasAssignment, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
-	Jay.setAccountInfo = function(name, description, description, appendages)
+	Jay.setAccountInfo = function(name, description, appendages)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
@@ -447,13 +482,13 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.accountInfo, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
-	Jay.sellAlias = function(alias, price, recpipient, appendages)
+	Jay.sellAlias = function(alias, price, recipient, appendages)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attechment.push(alias.length);
 		attachment = attachment.concat(converters.stringToByteArray(alias));
-		attachment = attachment.concat(Jay.numberToBytes(price*oneNxt));
+		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*oneNxt)));
 		if(recipient == undefined || recipient == "anyone" || recipient == "") return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasSell, [0,0,0,0,0,0,0,0], 0, 1, attachment, appendages);
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasSell, recipient, 0, 1, attachment, appendages);
 	}
@@ -475,7 +510,7 @@ var Jay = {};
 		attachment = attachment.concat(converters.stringToByteArray(name));
 		attachment = attachment.concat(Jay.wordBytes(description.length));
 		attachment = attachment.concat(converters.stringToByteArray(description));
-		attachment = attachment.concat(Jay.numberToBytes(quantity*Math.pow(10,decimals)));
+		attachment = attachment.concat(Jay.numberToBytes(Math.round(quantity*Math.pow(10,decimals))));
 		attachment.push(decimals);
 		return Jay.createTrf(Jay.types.asset, Jay.subtypes.assetIssuance, Jay.genesisRS, 0, 1000, attachment, appendages);
 	}
@@ -495,7 +530,7 @@ var Jay = {};
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(assetId));
 		attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
-		attachment = attachment.concat(Jay.numberToBytes(price*Jay.oneNxt));
+		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*Jay.oneNxt)));
 		return Jay.createTrf(Jay.types.asset, Jay.subtypes.askOrderPlacement, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
@@ -505,7 +540,7 @@ var Jay = {};
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(assetId));
 		attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
-		attachment = attachment.concat(Jay.numberToBytes(price*Jay.oneNxt));
+		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*Jay.oneNxt)));
 		return Jay.createTrf(Jay.types.asset, Jay.subtypes.bidOrderPlacement, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
@@ -536,7 +571,7 @@ var Jay = {};
 		attachment = attachment.concat(Jay.wordBytes(tags.length));
 		attachment = attachment.concat(converters.stringToByteArray(tags));
 		attachment = attachment.concat(converters.int32ToBytes(quantity));
-		attachment = attachment.concat(Jay.numberToBytes(price*Jay.oneNxt));
+		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*Jay.oneNxt)));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.goodsListing, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
@@ -553,7 +588,7 @@ var Jay = {};
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(itemId));
-		attachment = attachment.concat(Jay.numberToBytes(newPrice*Jay.oneNxt));
+		attachment = attachment.concat(Jay.numberToBytes(Math.round(newPrice*Jay.oneNxt)));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.priceChange, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
@@ -572,7 +607,7 @@ var Jay = {};
 		attachment.push(Jay.transactionVersion)
 		attachment = attachment.concat(Jay.numberToBytes(itemId));
 		attachment = attachment.concat(converters.int32ToBytes(quantity));
-		attachment = attachment.concat(Jay.numberToBytes(price*Jay.oneNxt));
+		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*Jay.oneNxt)));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.purchase, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
@@ -595,7 +630,7 @@ var Jay = {};
 		var attachment = [];
 		attachment.push(transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(purchaseId));
-		attachment = attachment.concat(Jay.numberToBytes(refundAmount*Jay.oneNxt));
+		attachment = attachment.concat(Jay.numberToBytes(Math.round(refundAmount*Jay.oneNxt)));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.refund, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
@@ -612,7 +647,7 @@ var Jay = {};
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(currencyId));
-		attachment = attachment.concat(amountPerUnit*Jay.oneNxt);
+		attachment = attachment.concat(Math.round(amountPerUnit*Jay.oneNxt));
 		return Jay.createTrf(Jay.types.monetarySystem, Jay.subtypes.reserveIncrease, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
@@ -622,7 +657,7 @@ var Jay = {};
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(currencyId));
 		attachment = attachment.concat(Jay.numberToBytes(amountQNT));
-		return Jay.createTrf(Jay.types.monetarySystem, Jay.subtyes.currencyTransfer, recipient, 0, 1, attachment, appendages)
+		return Jay.createTrf(Jay.types.monetarySystem, Jay.subtypes.currencyTransfer, recipient, 0, 1, attachment, appendages)
 	}
 
 	Jay.currencyMint = function(currencyId, nonce, units, counter, appendages)
@@ -923,6 +958,7 @@ function toByteArray(long) {
         ret.isValid = isValid;
         ret.timestamp = timestamp;
         ret.publicKey = converters.byteArrayToHexString(publicKey);
+        ret.accountRS = Jay.publicKeyToAccountId(ret.publicKey, true);
 
         return ret;
 
