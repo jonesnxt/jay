@@ -73,7 +73,7 @@ var Jay = {};
 
 	Jay.req = $.ajaxMultiQueue(6);
 
-	Jay.singleNode;
+	Jay.singleNode = "";
 	Jay.bestNodes = [];
 	Jay.isTestnet = false;
 
@@ -140,9 +140,7 @@ var Jay = {};
 
 		if(requestMethod == Jay.requestMethods.single)
 		{
-
-			if(Jay.singleNode == undefined) var useNode = Jay.commonNodes[0];
-			else var useNode = Jay.commonNodes[0];
+			var useNode = Jay.singleNode;
 			Jay.queue(useNode, parameters, onSuccess, onFailure);
 		}
 		else if(requestMethod == Jay.requestMethods.fastest)
@@ -937,7 +935,6 @@ function toByteArray(long) {
             tokenBytes[j + 2] = part[2];
             tokenBytes[j + 3] = part[1];
             tokenBytes[j + 4] = part[0];
-
         }
 
         if (i != 160) {
