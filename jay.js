@@ -59,7 +59,7 @@
 
 var Jay = {};
 
-	Jay.commonNodes = ["69.163.40.132","jnxt.org","nxt.noip.me","23.88.59.40","162.243.122.251"];
+	Jay.commonNodes = ["69.163.40.132", "jnxt.org","nxt.noip.me","23.88.59.40","162.243.122.251"];
 
 	Jay.msTimeout = 1000;
 
@@ -476,7 +476,7 @@ var Jay = {};
 		attachment.push(name.length);
 		attachment = attachment.concat(converters.stringToByteArray(name));
 		attachment = attachment.concat(Jay.wordBytes(description.length));
-		attachment = attachment.concat(converters.stringToByteArray(data));
+		attachment = attachment.concat(converters.stringToByteArray(description));
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.accountInfo, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
