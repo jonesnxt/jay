@@ -532,23 +532,23 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.asset, Jay.subtypes.assetTransfer, recipient, 0, 1, attachment, appendages);
 	}
 
-	Jay.placeAskOrder = function(assetId, quantityQNT, price, appendages)
+	Jay.placeAskOrder = function(assetId, quantityQNT, priceNQT, appendages)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(assetId));
 		attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
-		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*Jay.oneNxt)));
+		attachment = attachment.concat(Jay.numberToBytes(priceNQT));
 		return Jay.createTrf(Jay.types.asset, Jay.subtypes.askOrderPlacement, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
-	Jay.placeBidOrder = function(assetId, quantityQNT, price, appendages)
+	Jay.placeBidOrder = function(assetId, quantityQNT, priceNQT, appendages)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(assetId));
 		attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
-		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*Jay.oneNxt)));
+		attachment = attachment.concat(Jay.numberToBytes(priceNQT));
 		return Jay.createTrf(Jay.types.asset, Jay.subtypes.bidOrderPlacement, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
