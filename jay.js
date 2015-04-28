@@ -501,7 +501,7 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasBuy, recipient, amount, 1, attachment, appendages);
 	}
 
-	Jay.deleteAsset = function(alias)
+	Jay.deleteAlias = function(alias)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
