@@ -266,6 +266,7 @@ var Jay = {};
 	Jay.subtypes.accountInfo = 5;
 	Jay.subtypes.aliasSell = 6;
 	Jay.subtypes.aliasBuy = 7;
+	Jay.subtypes.aliasDelete = 8;
 	Jay.subtypes.assetIssuance = 0;
 	Jay.subtypes.assetTransfer = 1;
 	Jay.subtypes.askOrderPlacement = 2;
@@ -484,9 +485,9 @@ var Jay = {};
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
-		attechment.push(alias.length);
+		attachment.push(alias.length);
 		attachment = attachment.concat(converters.stringToByteArray(alias));
-		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*oneNxt)));
+		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*Jay.oneNxt)));
 		if(recipient == undefined || recipient == "anyone" || recipient == "") return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasSell, [0,0,0,0,0,0,0,0], 0, 1, attachment, appendages);
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasSell, recipient, 0, 1, attachment, appendages);
 	}
@@ -498,6 +499,15 @@ var Jay = {};
 		attachment.push(alias.length);
 		attachment = attachment.concat(converters.stringToByteArray(alias));
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasBuy, recipient, amount, 1, attachment, appendages);
+	}
+
+	Jay.deleteAsset = function(alias)
+	{
+		var attachment = [];
+		attachment.push(Jay.transactionVersion);
+		attachment.push(alias.length);
+		attachment = attachment.concat(converters.stringToByteArray(alias));
+		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasDelete, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
 	Jay.issueAsset = function(name, description, quantity, decimals, appendages)
