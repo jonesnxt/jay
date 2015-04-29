@@ -537,8 +537,18 @@ var Jay = {};
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(assetId));
-		attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
-		attachment = attachment.concat(Jay.numberToBytes(priceNQT));
+
+		if(decimals == undefined || typeof(decimals) != "number")
+		{
+			attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
+			attachment = attachment.concat(Jay.numberToBytes(priceNQT));
+			appendages = decimals;
+		}
+		else
+		{
+			attachment = attachment.concat(Jay.numberToBytes(Math.round(quantityQNT*Math.pow(10, decimals))));
+			attachment = attachment.concat(Jay.numberToBytes(Math.round(priceNQT*Math.pow(10, 8-decimals))));
+		}
 		return Jay.createTrf(Jay.types.asset, Jay.subtypes.askOrderPlacement, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
@@ -547,7 +557,6 @@ var Jay = {};
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(assetId));
-		alert(typeof(decimals))
 
 		if(decimals == undefined || typeof(decimals) != "number")
 		{
