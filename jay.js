@@ -501,7 +501,7 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasBuy, recipient, amount, 1, attachment, appendages);
 	}
 
-	Jay.deleteAsset = function(alias)
+	Jay.deleteAlias = function(alias)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
@@ -513,7 +513,7 @@ var Jay = {};
 	Jay.issueAsset = function(name, description, quantity, decimals, appendages)
 	{
 		var attachment = [];
-		attachment.push(transactionVersion);
+		attachment.push(Jay.transactionVersion);
 		attachment.push(name.length);
 		attachment = attachment.concat(converters.stringToByteArray(name));
 		attachment = attachment.concat(Jay.wordBytes(description.length));
@@ -547,8 +547,7 @@ var Jay = {};
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(assetId));
-		alert(typeof(decimals))
-
+		
 		if(decimals == undefined || typeof(decimals) != "number")
 		{
 			attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
