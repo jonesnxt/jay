@@ -557,7 +557,11 @@ var Jay = {};
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(assetId));
+<<<<<<< HEAD
+
+=======
 		
+>>>>>>> f14b419c7bd4b5090b37a74d42d293377dcf31e6
 		if(decimals == undefined || typeof(decimals) != "number")
 		{
 			attachment = attachment.concat(Jay.numberToBytes(quantityQNT));
