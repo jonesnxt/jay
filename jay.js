@@ -629,13 +629,13 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.quantityChange, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
-	Jay.dgsPurchase = function(itemId, quantity, price, appendages)
+	Jay.dgsPurchase = function(itemId, quantity, priceNQT, appendages)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion)
 		attachment = attachment.concat(Jay.numberToBytes(itemId));
 		attachment = attachment.concat(converters.int32ToBytes(quantity));
-		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*Jay.oneNxt)));
+		attachment = attachment.concat(Jay.numberToBytes(priceNQT));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.purchase, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
