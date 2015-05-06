@@ -649,7 +649,7 @@ var Jay = {};
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(itemId));
-		appendages = Jay.addAppendage(Jay.appendages.arbitraryMessage, feedback, appendages);
+		appendages = Jay.addAppendage(Jay.appendages.message, feedback, appendages);
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.feedback, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
