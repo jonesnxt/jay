@@ -605,7 +605,7 @@ var Jay = {};
 
 	Jay.dgsDelisting = function(itemId, appendages)
 	{
-		var attachmetn = [];
+		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(itemId));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.goodsDelisting, Jay.genesisRS, 0, 1, attachment, appendages);
@@ -629,13 +629,13 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.quantityChange, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
-	Jay.dgsPurchase = function(itemId, quantity, price, appendages)
+	Jay.dgsPurchase = function(itemId, quantity, priceNQT, appendages)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion)
 		attachment = attachment.concat(Jay.numberToBytes(itemId));
 		attachment = attachment.concat(converters.int32ToBytes(quantity));
-		attachment = attachment.concat(Jay.numberToBytes(Math.round(price*Jay.oneNxt)));
+		attachment = attachment.concat(Jay.numberToBytes(priceNQT));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.purchase, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
@@ -649,14 +649,14 @@ var Jay = {};
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(itemId));
-		appendages = Jay.addAppendage(Jay.appendages.arbitraryMessage, feedback, appendages);
+		appendages = Jay.addAppendage(Jay.appendages.message, feedback, appendages);
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.feedback, Jay.genesisRS, 0, 1, attachment, appendages);
 	}
 
 	Jay.dgsRefund = function(purchaseId, refundAmount, appendages)
 	{
 		var attachment = [];
-		attachment.push(transactionVersion);
+		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(purchaseId));
 		attachment = attachment.concat(Jay.numberToBytes(Math.round(refundAmount*Jay.oneNxt)));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.refund, Jay.genesisRS, 0, 1, attachment, appendages);
