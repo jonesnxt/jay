@@ -656,7 +656,7 @@ var Jay = {};
 	Jay.dgsRefund = function(purchaseId, refundAmount, appendages)
 	{
 		var attachment = [];
-		attachment.push(transactionVersion);
+		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(purchaseId));
 		attachment = attachment.concat(Jay.numberToBytes(Math.round(refundAmount*Jay.oneNxt)));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.refund, Jay.genesisRS, 0, 1, attachment, appendages);
