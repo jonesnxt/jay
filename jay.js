@@ -605,7 +605,7 @@ var Jay = {};
 
 	Jay.dgsDelisting = function(itemId, appendages)
 	{
-		var attachmetn = [];
+		var attachment = [];
 		attachment.push(Jay.transactionVersion);
 		attachment = attachment.concat(Jay.numberToBytes(itemId));
 		return Jay.createTrf(Jay.types.marketplace, Jay.subtypes.goodsDelisting, Jay.genesisRS, 0, 1, attachment, appendages);
