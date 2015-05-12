@@ -492,7 +492,7 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasSell, recipient, 0, 1, attachment, appendages);
 	}
 
-	Jay.buyAlias = function(alias, amount, seller, appendages)
+	Jay.buyAlias = function(alias, amount, recipient, appendages)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
