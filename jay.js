@@ -195,7 +195,6 @@ var Jay = {};
 			// search for all things
 			o1.requestProcessingTime = 0;
 			o2.requestProcessingTime = 0;
-			alert(params);
 			return objectEquals(o1, o2);
 		}
 		else
