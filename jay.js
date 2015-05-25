@@ -162,7 +162,12 @@ var Jay = {};
 			for(var a=0;a<3;a++)
 			{
 				Jay.queue(Jay.bestNodes[a], parameters, function(resp, status, xhr) {
-					vld.push(resp);
+				    try {
+				        vld.push(JSON.parse(resp));
+				    }
+				    catch (err) {
+				        onFailure({ "error": "Unable to Validate" }, "error", xhr);
+				    }
 					if(vld.length == 3)
 					{
 						// compare
