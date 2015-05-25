@@ -60,6 +60,7 @@
 var Jay = {};
 
 	Jay.commonNodes = ["69.163.40.132", "jnxt.org","nxt.noip.me","23.88.59.40","162.243.122.251"];
+	Jay.commonTestnetNodes = ["localhost"];
 
 	Jay.msTimeout = 1000;
 
