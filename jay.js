@@ -60,6 +60,7 @@
 var Jay = {};
 
 	Jay.commonNodes = ["69.163.40.132", "jnxt.org","nxt.noip.me","23.88.59.40","162.243.122.251"];
+	Jay.commonTestnetNodes = ["localhost"];
 
 	Jay.msTimeout = 1000;
 
@@ -162,7 +163,12 @@ var Jay = {};
 			for(var a=0;a<3;a++)
 			{
 				Jay.queue(Jay.bestNodes[a], parameters, function(resp, status, xhr) {
-					vld.push(resp);
+				    try {
+				        vld.push(JSON.parse(resp));
+				    }
+				    catch (err) {
+				        onFailure({ "error": "Unable to Validate" }, "error", xhr);
+				    }
 					if(vld.length == 3)
 					{
 						// compare
@@ -195,7 +201,6 @@ var Jay = {};
 			// search for all things
 			o1.requestProcessingTime = 0;
 			o2.requestProcessingTime = 0;
-			alert(params);
 			return objectEquals(o1, o2);
 		}
 		else
@@ -492,7 +497,7 @@ var Jay = {};
 		return Jay.createTrf(Jay.types.messaging, Jay.subtypes.aliasSell, recipient, 0, 1, attachment, appendages);
 	}
 
-	Jay.buyAlias = function(alias, amount, seller, appendages)
+	Jay.buyAlias = function(alias, amount, recipient, appendages)
 	{
 		var attachment = [];
 		attachment.push(Jay.transactionVersion);
